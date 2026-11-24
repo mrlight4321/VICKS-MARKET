@@ -63,12 +63,35 @@
     .animate-pop {
       animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
+    @keyframes crownGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
+      50% { box-shadow: 0 0 18px 2px rgba(245, 158, 11, 0.55); }
+    }
+    .admin-glow {
+      animation: crownGlow 2.4s infinite ease-in-out;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 min-h-screen flex flex-col">
 
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-[92%] max-w-md pointer-events-none"></div>
+
+  <!-- LIVE GLOBAL ADMIN ANNOUNCEMENT BANNER (SYNCED VIA FIREBASE) -->
+  <div id="globalAnnouncementBar" class="hidden bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-xs sm:text-sm font-extrabold shadow-sm">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="px-2 py-0.5 rounded-full bg-black/20 text-[10px] uppercase tracking-wider shrink-0 flex items-center gap-1">
+          <i data-lucide="megaphone" class="w-3 h-3"></i>
+          <span data-i18n="adminNoticeTag">إعلان الإدارة</span>
+        </span>
+        <p id="globalAnnouncementText" class="truncate"></p>
+      </div>
+      <button type="button" onclick="dismissAnnouncementLocally()" class="p-1 rounded-lg hover:bg-white/20 transition shrink-0" aria-label="Dismiss">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </div>
 
   <!-- TOP STICKY HEADER -->
   <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200/80 dark:border-slate-800 shadow-sm">
@@ -81,7 +104,7 @@
             <i data-lucide="shopping-bag" class="w-5 h-5 stroke-[2.4]"></i>
           </div>
           <div>
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 flex-wrap">
               <span class="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">VICKS MARKET</span>
               <span id="userBadge" class="hidden text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"></span>
             </div>
@@ -89,12 +112,43 @@
           </div>
         </button>
 
-        <!-- Action Controls: Language, Theme, AI Assistant, Account/Login -->
+        <!-- Action Controls: Admin Panel (if admin), Points/Rank, Cart, Language, Theme, AI, Account -->
         <div class="flex items-center gap-1.5 sm:gap-2">
+          <!-- Official Admin Command Center Button (Visible when logged in as vicksmarket@gmail.com) -->
+          <button
+            id="adminCommandBtn"
+            onclick="openAdminDashboardModal()"
+            class="hidden admin-glow px-2.5 sm:px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-slate-950 text-xs font-extrabold items-center gap-1.5 shadow-md transition active:scale-95"
+            title="لوحة تحكم المشرف العام"
+          >
+            <i data-lucide="crown" class="w-4 h-4 stroke-[2.5]"></i>
+            <span class="hidden md:inline" data-i18n="adminPanelBtn">لوحة المشرف</span>
+          </button>
+
+          <!-- Loyalty Points & VIP Rank Pill -->
+          <button
+            onclick="openPointsModal()"
+            class="px-2.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 border border-amber-200/80 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 text-xs font-extrabold flex items-center gap-1 transition active:scale-95"
+            title="نقاط فيكس والمكافآت"
+          >
+            <i data-lucide="award" class="w-4 h-4 text-amber-500"></i>
+            <span id="pointsCounterLabel">0</span>
+          </button>
+
+          <!-- Cart Drawer Button -->
+          <button
+            onclick="openCartModal()"
+            class="relative p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition active:scale-95"
+            title="سلة المشتريات"
+          >
+            <i data-lucide="shopping-cart" class="w-4 h-4 text-vicks-500"></i>
+            <span id="cartBadgeCount" class="hidden absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full bg-vicks-500 text-white text-[10px] font-extrabold flex items-center justify-center">0</span>
+          </button>
+
           <!-- Language Switcher -->
           <button id="langToggleBtn" onclick="toggleLanguage()" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition active:scale-95" title="Switch Language">
             <i data-lucide="languages" class="w-4 h-4 text-vicks-500"></i>
-            <span id="langLabel">English</span>
+            <span id="langLabel" class="hidden sm:inline">English</span>
           </button>
 
           <!-- Dark Mode Switcher -->
@@ -105,18 +159,18 @@
           <!-- VICKS AI Assistant Button -->
           <button onclick="openAiModal()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-orange-500/20 transition active:scale-95">
             <i data-lucide="sparkles" class="w-4 h-4"></i>
-            <span class="hidden sm:inline" data-i18n="aiBtn">VICKS AI</span>
+            <span class="hidden lg:inline" data-i18n="aiBtn">VICKS AI</span>
           </button>
 
           <!-- Account / Login Button -->
           <button id="accountBtn" onclick="handleAccountClick()" class="px-2.5 sm:px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 transition active:scale-95">
-            <i data-lucide="user-circle-2" class="w-4 h-4 text-vicks-500"></i>
+            <i id="accountIcon" data-lucide="user-circle-2" class="w-4 h-4 text-vicks-500"></i>
             <span id="accountLabel">دخول</span>
           </button>
         </div>
       </div>
 
-      <!-- Search Row: Search Input + Visual Search + Clear -->
+      <!-- Search Row: Search Input + Visual Search + Publish Product CTA -->
       <div class="mt-2.5 flex items-center gap-2">
         <div class="relative flex-1">
           <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 start-3.5 pointer-events-none"></i>
@@ -124,7 +178,7 @@
             id="searchInput"
             type="text"
             oninput="handleSearchInput(this.value)"
-            placeholder="ابحث في القصص أو المتاجر..."
+            placeholder="ابحث في المنتجات، العروض، أو الحالات..."
             class="w-full ps-10 pe-9 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-transparent focus:border-vicks-500 focus:bg-white dark:focus:bg-slate-900 text-sm outline-none transition"
           />
           <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute top-1/2 -translate-y-1/2 end-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
@@ -136,6 +190,12 @@
         <button onclick="openVisualSearchModal()" class="p-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/50 dark:hover:bg-orange-900/60 border border-orange-200 dark:border-orange-800/60 text-vicks-600 dark:text-orange-400 flex items-center gap-1.5 transition active:scale-95 shrink-0" title="البحث البصري الذكي">
           <i data-lucide="scan-search" class="w-5 h-5"></i>
           <span class="hidden md:inline text-xs font-bold" data-i18n="visualSearchShort">بحث بالصورة</span>
+        </button>
+
+        <!-- Quick Publish Product / Offer Button -->
+        <button onclick="openPublishListingModal()" class="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-vicks-500 dark:hover:bg-vicks-600 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition active:scale-95 shrink-0">
+          <i data-lucide="plus-square" class="w-4 h-4 text-orange-400 dark:text-white"></i>
+          <span class="hidden sm:inline" data-i18n="publishListingBtn">انشر عرضاً</span>
         </button>
       </div>
     </div>
@@ -162,15 +222,15 @@
       </button>
     </div>
 
-    <!-- SELLER STORIES BAR -->
+    <!-- SELLER & USER STORIES BAR -->
     <section aria-label="Seller Stories" class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 sm:p-4 border border-slate-200/70 dark:border-slate-800 shadow-sm">
       <div class="flex items-center justify-between gap-2 mb-3">
         <h2 class="text-sm font-extrabold flex items-center gap-2 text-slate-800 dark:text-slate-100">
           <span class="w-2 h-2 rounded-full bg-vicks-500 animate-pulse"></span>
-          <span data-i18n="storiesTitle">قصص المتاجر والخبراء</span>
+          <span data-i18n="storiesTitle">الحالات</span>
         </h2>
         <div class="flex items-center gap-2">
-          <span class="hidden sm:inline text-xs text-slate-400" data-i18n="storiesHint">اضغط للمشاهدة والرد</span>
+          <span class="hidden sm:inline text-xs text-slate-400" data-i18n="storiesHint">أضف حالتك أو اضغط للمشاهدة</span>
           <button
             type="button"
             onclick="openAddStoryModal()"
@@ -186,28 +246,63 @@
       </div>
     </section>
 
-    <!-- EMPTY / READY PLACEHOLDER WHERE PRODUCTS & LOCATIONS USED TO BE -->
-    <section id="emptyCatalogArea" class="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-4 shadow-2xs">
-      <div class="w-16 h-16 mx-auto rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-vicks-500 flex items-center justify-center">
-        <i data-lucide="inbox" class="w-8 h-8"></i>
+    <!-- LIVE DYNAMIC MARKETPLACE FEED (USER & ADMIN PUBLISHED LISTINGS) -->
+    <section id="liveMarketplaceSection" class="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <span data-i18n="liveFeedTag">مباشر للجميع</span>
+            </span>
+            <h2 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white" data-i18n="liveListingsTitle">سوق الأعضاء والعروض المباشرة</h2>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1" data-i18n="liveListingsSub">انشر منتجك أو عرضك ليظهر فوراً لكل الزوار مع تقييمات وطلب مباشر.</p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Favorites Filter Toggle -->
+          <button
+            id="favFilterBtn"
+            type="button"
+            onclick="toggleFavoritesFilter()"
+            class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 text-xs font-extrabold flex items-center gap-1.5 transition"
+          >
+            <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500"></i>
+            <span data-i18n="favoritesLabel">المفضلة</span>
+            <span id="favCountBadge" class="px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-300 text-[10px]">0</span>
+          </button>
+
+          <!-- Sort Selector -->
+          <select
+            id="listingSortSelect"
+            onchange="handleSortChange(this.value)"
+            class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold outline-none focus:ring-2 focus:ring-vicks-500"
+          >
+            <option value="newest" data-i18n="sortNewest">الأحدث أولاً</option>
+            <option value="priceAsc" data-i18n="sortPriceAsc">السعر: الأقل للأعلى</option>
+            <option value="priceDesc" data-i18n="sortPriceDesc">السعر: الأعلى للأقل</option>
+          </select>
+
+          <!-- Publish Button -->
+          <button
+            type="button"
+            onclick="openPublishListingModal()"
+            class="px-3.5 py-2 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm shadow-orange-500/20 transition active:scale-95"
+          >
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span data-i18n="addProductOfferBtn">إضافة منتج / عرض</span>
+          </button>
+        </div>
       </div>
-      <div class="space-y-1.5 max-w-md mx-auto">
-        <h3 id="emptyAreaTitle" class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white" data-i18n="noProductsTitle">لا توجد منتجات أو مواقع مضافة حالياً</h3>
-        <p id="emptyAreaDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed" data-i18n="noProductsDesc">تم إزالة المنتجات وأقسام المواقع. يمكنك استعراض القصص، استخدام مساعد VICKS AI، أو فتح التقييمات والمجتمع.</p>
-      </div>
-      <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
-        <button onclick="openReviewsModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
-          <i data-lucide="message-square" class="w-4 h-4 text-vicks-500"></i>
-          <span data-i18n="reviewsTitle">آراء المشترين</span>
-        </button>
-        <button onclick="openAiModal()" class="px-4 py-2.5 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm shadow-orange-500/20 transition">
-          <i data-lucide="sparkles" class="w-4 h-4"></i>
-          <span data-i18n="aiBtn">VICKS AI</span>
-        </button>
+
+      <!-- Dynamic Listings Grid or Empty State -->
+      <div id="liveListingsGrid">
+        <!-- Rendered via JS -->
       </div>
     </section>
 
-    <!-- SUPPORT & COMMUNITY HUB SECTION -->
+    <!-- SUPPORT, LIVE POLLS & COMMUNITY HUB SECTION -->
     <section id="communityHub" class="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
@@ -217,10 +312,21 @@
           </span>
           <h2 class="text-lg sm:text-xl font-extrabold" data-i18n="hubTitle">خدمة العملاء، المجموعات، والمقترحات</h2>
         </div>
-        <button onclick="openAiModal()" class="self-start sm:self-auto px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-vicks-500 dark:hover:bg-vicks-600 text-white text-xs font-bold flex items-center gap-2 transition">
-          <i data-lucide="message-square-heart" class="w-4 h-4"></i>
-          <span data-i18n="talkToStore">تحدث مع صاحب المتجر / المساعد</span>
-        </button>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="openReviewsModal()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-extrabold flex items-center gap-1.5 transition">
+            <i data-lucide="star" class="w-4 h-4 text-amber-500"></i>
+            <span data-i18n="reviewsTitle">آراء المشترين</span>
+          </button>
+          <button onclick="openAiModal()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-vicks-500 dark:hover:bg-vicks-600 text-white text-xs font-bold flex items-center gap-2 transition">
+            <i data-lucide="message-square-heart" class="w-4 h-4"></i>
+            <span data-i18n="talkToStore">تحدث مع صاحب المتجر / المساعد</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- LIVE INTERACTIVE COMMUNITY POLL (SYNCED VIA FIREBASE) -->
+      <div id="livePollWidget" class="p-4 rounded-2xl bg-gradient-to-br from-slate-50 via-orange-50/40 to-amber-50/40 dark:from-slate-800/80 dark:via-slate-800/50 dark:to-slate-900 border border-orange-200/70 dark:border-slate-700 space-y-3">
+        <!-- Rendered via JS -->
       </div>
 
       <!-- 3 Hub Cards: Complaints, Suggestions, Groups -->
@@ -253,7 +359,7 @@
         </button>
       </div>
 
-      <!-- Footer Links Grid: Store, Legal, Contact -->
+      <!-- Footer Links Grid: Store, Legal, Contact & Official Admin Email -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800 text-sm">
         <div>
           <h4 class="font-extrabold text-xs uppercase tracking-wider text-vicks-600 dark:text-orange-400 mb-2.5" data-i18n="storeLinksHeading">المتجر</h4>
@@ -272,8 +378,15 @@
           </ul>
         </div>
 
-        <div>
-          <h4 class="font-extrabold text-xs uppercase tracking-wider text-vicks-600 dark:text-orange-400 mb-2.5" data-i18n="contactHeading">تواصل</h4>
+        <div class="space-y-2">
+          <h4 class="font-extrabold text-xs uppercase tracking-wider text-vicks-600 dark:text-orange-400 mb-1.5" data-i18n="contactHeading">تواصل مع الإدارة</h4>
+          <button onclick="copyAdminEmail()" class="w-full py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-950/70 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-xs font-extrabold flex items-center justify-between gap-2 transition">
+            <span class="flex items-center gap-1.5 truncate">
+              <i data-lucide="crown" class="w-4 h-4 text-amber-500 shrink-0"></i>
+              <span class="truncate">vicksmarket@gmail.com</span>
+            </span>
+            <i data-lucide="copy" class="w-3.5 h-3.5 shrink-0 opacity-75"></i>
+          </button>
           <button onclick="openAiModal()" class="w-full py-2.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
             <i data-lucide="message-circle" class="w-4 h-4 text-vicks-400"></i>
             <span data-i18n="talkToStore">تحدث مع صاحب المتجر</span>
@@ -293,7 +406,7 @@
       </div>
 
       <div class="text-center text-[11px] font-medium text-slate-400 pt-1">
-        VICKS MARKET • ALL RIGHTS RESERVED BY MOM 2026 ©
+        VICKS MARKET • OFFICIAL ADMIN: VICKSMAERKET@GMAIL.COM • ALL RIGHTS RESERVED BY MOM 2026 ©
       </div>
     </section>
   </main>
@@ -339,6 +452,9 @@
       onSnapshot
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+    // Official Admin Email Constant
+    const OFFICIAL_ADMIN_EMAIL = "vicksmarket@gmail.com";
+
     // Your web app's Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCraxuu0hYyvXLDPddfhkWRwEBjnZQL5Ec",
@@ -376,32 +492,103 @@
     // -----------------------------------------------------------------------
     // 1. STATE MANAGEMENT & LOCAL FALLBACK PERSISTENCE
     // -----------------------------------------------------------------------
-    const LOCAL_FALLBACK_KEY = "vicks_market_realtime_fallback_v1";
+    const LOCAL_FALLBACK_KEY = "vicks_market_legendary_v2";
 
     const defaultReviews = [
       { id: "r1", author: "مريم عبد الله", rating: 5, text: "تجربة استخدام المنصة سهلة وسريعة جداً شكراً فيكس ماركت!", likes: 12 },
       { id: "r2", author: "أحمد سامي", rating: 4, text: "واجهة نظيفة ومريحة للعين في الوضع الليلي والنهاري.", likes: 6 },
-      { id: "r3", author: "نور حسن", rating: 5, text: "التنقل بين الأقسام والقصص سلس جداً.", likes: 8 }
+      { id: "r3", author: "نور حسن", rating: 5, text: "التنقل بين الأقسام والحالات سلس جداً.", likes: 8 }
     ];
+
+    const defaultPoll = {
+      id: "poll_main",
+      questionAr: "ما أكثر قسم تحب تفعيله بقوة في VICKS MARKET؟",
+      questionEn: "Which category would you love to see expanded next in VICKS MARKET?",
+      options: [
+        { id: "opt1", ar: "عروض اليوم والخصومات الحصرية 🔥", en: "Daily Flash Deals & Discounts 🔥", votes: 14 },
+        { id: "opt2", ar: "الإلكترونيات والأجهزة الذكية 📱", en: "Electronics & Smart Gadgets 📱", votes: 9 },
+        { id: "opt3", ar: "الأزياء والعطور الفاخرة ✨", en: "Fashion & Luxury Fragrances ✨", votes: 7 }
+      ]
+    };
 
     const state = {
       lang: "ar", // 'ar' | 'en'
       dark: false,
       category: "all", // 'all' | 'offers' | 'electronics' | 'clothing'
       searchQuery: "",
-      user: null, // null or { name, email, storeName }
+      sortBy: "newest",
+      onlyFavorites: false,
+      user: null, // null or { name, email, storeName, isAdmin }
       stories: [],
+      listings: [], // User & Admin published products/offers
+      favorites: [], // Array of listing IDs
+      cart: [], // Array of { listingId, title, price, seller, emoji, qty }
+      points: 25, // Loyalty VICKS Points
+      announcement: "", // Live Admin Global Banner
+      announcementDismissed: false,
+      poll: { ...defaultPoll },
+      votedOptionId: null,
       reviews: [...defaultReviews],
       groupMessages: [],
       complaintsSubmitted: [],
       suggestionsSubmitted: [],
-      syncStatus: "connecting" // 'live' | 'fallback'
+      syncStatus: "connecting"
     };
+
+    function isAdminUser(userObj = state.user) {
+      if (!userObj || !userObj.email) return false;
+      return userObj.email.trim().toLowerCase() === OFFICIAL_ADMIN_EMAIL;
+    }
+
+    function addVicksPoints(amount, reasonAr, reasonEn) {
+      state.points = (Number(state.points) || 0) + amount;
+      updatePointsDisplay();
+      saveLocalFallback();
+      if (reasonAr && reasonEn) {
+        showToast(
+          state.lang === "ar"
+            ? `+${amount} نقطة فيكس! (${reasonAr})`
+            : `+${amount} VICKS Points! (${reasonEn})`,
+          "success"
+        );
+      }
+    }
+
+    function getVipTierInfo() {
+      if (isAdminUser()) {
+        return {
+          ar: "المشرف العام 👑",
+          en: "Official Admin 👑",
+          badgeClass: "bg-amber-400/20 text-amber-700 dark:text-amber-300 border border-amber-400/50"
+        };
+      }
+      const pts = Number(state.points) || 0;
+      if (pts >= 200) {
+        return { ar: "عضو ذهبي VIP 💎", en: "Gold VIP Member 💎", badgeClass: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" };
+      }
+      if (pts >= 80) {
+        return { ar: "عضو فضي ⭐", en: "Silver Member ⭐", badgeClass: "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200" };
+      }
+      return { ar: "عضو برونزي 🏅", en: "Bronze Member 🏅", badgeClass: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300" };
+    }
+
+    function updatePointsDisplay() {
+      const el = document.getElementById("pointsCounterLabel");
+      if (el) el.textContent = String(state.points);
+    }
 
     function saveLocalFallback() {
       try {
         const snapshot = {
+          user: state.user,
           stories: state.stories,
+          listings: state.listings,
+          favorites: state.favorites,
+          cart: state.cart,
+          points: state.points,
+          announcement: state.announcement,
+          poll: state.poll,
+          votedOptionId: state.votedOptionId,
           reviews: state.reviews,
           groupMessages: state.groupMessages,
           complaintsSubmitted: state.complaintsSubmitted,
@@ -418,7 +605,18 @@
         const raw = localStorage.getItem(LOCAL_FALLBACK_KEY);
         if (!raw) return;
         const parsed = JSON.parse(raw);
+        if (parsed.user && parsed.user.email) {
+          parsed.user.isAdmin = isAdminUser(parsed.user);
+          state.user = parsed.user;
+        }
         if (Array.isArray(parsed.stories)) state.stories = parsed.stories;
+        if (Array.isArray(parsed.listings)) state.listings = parsed.listings;
+        if (Array.isArray(parsed.favorites)) state.favorites = parsed.favorites;
+        if (Array.isArray(parsed.cart)) state.cart = parsed.cart;
+        if (typeof parsed.points === "number") state.points = parsed.points;
+        if (typeof parsed.announcement === "string") state.announcement = parsed.announcement;
+        if (parsed.poll && Array.isArray(parsed.poll.options)) state.poll = parsed.poll;
+        if (parsed.votedOptionId) state.votedOptionId = parsed.votedOptionId;
         if (Array.isArray(parsed.reviews) && parsed.reviews.length > 0) state.reviews = parsed.reviews;
         if (Array.isArray(parsed.groupMessages)) state.groupMessages = parsed.groupMessages;
         if (Array.isArray(parsed.complaintsSubmitted)) state.complaintsSubmitted = parsed.complaintsSubmitted;
@@ -445,7 +643,10 @@
         langToggle: 'English',
         aiBtn: 'VICKS AI',
         loginBtn: 'دخول',
-        searchPlaceholder: 'ابحث في القصص أو المتاجر...',
+        adminPanelBtn: 'لوحة المشرف',
+        adminNoticeTag: 'إعلان الإدارة',
+        publishListingBtn: 'انشر عرضاً',
+        searchPlaceholder: 'ابحث في المنتجات، العروض، أو الحالات...',
         visualSearchShort: 'بحث بالصورة',
         resetFilters: 'عرض الكل',
         storiesTitle: 'الحالات',
@@ -453,7 +654,7 @@
         addStoryBtn: 'إضافة حالة',
         addStoryCardLabel: 'أضف حالة',
         addStoryModalTitle: 'إضافة حالة جديدة',
-        addStoryModalSub: 'شارك حالتك الآن لتظهر فوراً في شريط الحالات',
+        addStoryModalSub: 'شارك حالتك الآن لتظهر فوراً في شريط الحالات (+15 نقطة)',
         storyAuthorLabel: 'الاسم أو المتجر',
         storyCaptionLabel: 'نص الحالة أو العنوان *',
         storyCaptionPlaceholder: 'اكتب حالتك هنا...',
@@ -462,8 +663,16 @@
         storyImageLabel: 'رابط صورة (اختياري)',
         publishStoryBtn: 'نشر الحالة',
         noStoriesYet: 'لا توجد حالات مضافة بعد — اضغط على "إضافة حالة" لبدء حالتك الأولى.',
-        noProductsTitle: 'لا توجد منتجات أو مواقع مضافة حالياً',
-        noProductsDesc: 'تم إزالة المنتجات وأقسام المواقع. يمكنك إضافة ومشاهدة الحالات، استخدام مساعد VICKS AI، أو فتح التقييمات والمجتمع.',
+        liveFeedTag: 'مباشر للجميع',
+        liveListingsTitle: 'سوق الأعضاء والعروض المباشرة',
+        liveListingsSub: 'انشر منتجك أو عرضك ليظهر فوراً لكل الزوار مع تقييمات وطلب مباشر.',
+        favoritesLabel: 'المفضلة',
+        sortNewest: 'الأحدث أولاً',
+        sortPriceAsc: 'السعر: الأقل للأعلى',
+        sortPriceDesc: 'السعر: الأعلى للأقل',
+        addProductOfferBtn: 'إضافة منتج / عرض',
+        emptyListingsTitle: 'السوق جاهز لأول عرض أو منتج!',
+        emptyListingsDesc: 'تم إزالة المنتجات الجاهزة السابقة. يمكنك الآن نشر أي منتج أو عرض جديد وسيظهر فوراً لجميع المستخدمين في الوقت الفعلي.',
         hubBadge: 'مركز الدعم والمجتمع',
         hubTitle: 'خدمة العملاء، المجموعات، والمقترحات',
         talkToStore: 'تحدث مع صاحب المتجر',
@@ -480,7 +689,7 @@
         legalHeading: 'قانوني',
         linkTerms: 'الشروط والأحكام',
         linkVerify: 'تحقق الحساب',
-        contactHeading: 'تواصل',
+        contactHeading: 'تواصل مع الإدارة',
         disclaimerTitle: 'إخلاء مسؤولية قانوني: ',
         disclaimerBody: 'Vicks Market هي منصة للوساطة والربط بين البائع والمشتري فقط، إدارة الموقع غير مسؤولة عن المحتوى أو المعاملات بين المستخدمين.',
         reviewsTitle: 'آراء المشترين',
@@ -494,7 +703,7 @@
         uploadFromDevice: 'ارفع صورة من الجهاز',
         openCamera: 'افتح الكاميرا وصور',
         visualSearchFormats: 'يدعم PNG, JPG بجودة عالية',
-        aiWelcome: 'أهلاً بك في VICKS AI. أنا مساعدك الشخصي داخل VICKS MARKET، أقدر أساعدك في الحالات، التقييمات، أو أي استفسار. تأمرني بإيه يا ملك؟',
+        aiWelcome: 'أهلاً بك في VICKS AI. أنا مساعدك الشخصي داخل VICKS MARKET! تقدر تسألني عن نشر المنتجات، الحالات، نظام النقاط، أو التواصل مع المشرف العام (vicksmarket@gmail.com). تأمرني بإيه يا ملك؟',
         aiInputPlaceholder: 'اسأل VICKS AI عن أي شيء...',
         loginHeading: 'أهلاً بك',
         loginSub: 'سجّل دخولك للمتابعة في VICKS MARKET',
@@ -519,7 +728,7 @@
         signupSubmit: 'إنشاء الحساب',
         haveAccount: 'لديك حساب بالفعل؟',
         complaintFormTitle: 'تقديم شكوى',
-        complaintFormSub: 'ساعدنا في الحفاظ على بيئة آمنة',
+        complaintFormSub: 'تُرسل مباشرة إلى لوحة المشرف العام (vicksmarket@gmail.com)',
         complaintTargetLabel: 'ID أو اسم المستخدم المشتكى عليه *',
         complaintTypeLabel: 'نوع الشكوى *',
         complaintDetailsLabel: 'تفاصيل الشكوى *',
@@ -532,7 +741,7 @@
         suggestionTextLabel: 'اقتراحك *',
         suggestionSubmitBtn: 'إرسال الاقتراح',
         groupRoomTitle: 'مجموعة Vicks Market',
-        groupRoomSub: 'مفتوح للجميع • المجموعة الرسمية',
+        groupRoomSub: 'مفتوح للجميع • بإشراف vicksmarket@gmail.com',
         groupEmpty: 'لا توجد رسائل بعد — كُن أول من يكتب!',
         groupPlaceholder: 'اكتب رسالة...',
         storyReplyPlaceholder: 'اكتب رداً...',
@@ -544,7 +753,10 @@
         langToggle: 'العربية',
         aiBtn: 'VICKS AI',
         loginBtn: 'Log in',
-        searchPlaceholder: 'Search stories...',
+        adminPanelBtn: 'Admin Hub',
+        adminNoticeTag: 'Admin Notice',
+        publishListingBtn: 'Post Offer',
+        searchPlaceholder: 'Search products, offers, or stories...',
         visualSearchShort: 'Visual Search',
         resetFilters: 'Show All',
         storiesTitle: 'Stories',
@@ -552,7 +764,7 @@
         addStoryBtn: 'Add Story',
         addStoryCardLabel: 'Add Story',
         addStoryModalTitle: 'Add a New Story',
-        addStoryModalSub: 'Publish your story so it appears right away in the stories bar',
+        addStoryModalSub: 'Publish your story so it appears right away (+15 pts)',
         storyAuthorLabel: 'Name or Store',
         storyCaptionLabel: 'Story Caption / Title *',
         storyCaptionPlaceholder: 'Write your story text...',
@@ -561,8 +773,16 @@
         storyImageLabel: 'Image URL (Optional)',
         publishStoryBtn: 'Publish Story',
         noStoriesYet: 'No stories yet — tap "Add Story" to post your first story.',
-        noProductsTitle: 'No products or locations currently listed',
-        noProductsDesc: 'Products and location sections have been removed. You can add and view stories, chat with VICKS AI, or open reviews and community.',
+        liveFeedTag: 'Live Sync',
+        liveListingsTitle: 'Community Marketplace & Live Offers',
+        liveListingsSub: 'Publish your product or offer to appear immediately for all visitors.',
+        favoritesLabel: 'Favorites',
+        sortNewest: 'Newest First',
+        sortPriceAsc: 'Price: Low to High',
+        sortPriceDesc: 'Price: High to Low',
+        addProductOfferBtn: 'Add Product / Offer',
+        emptyListingsTitle: 'Marketplace Ready for Your First Listing!',
+        emptyListingsDesc: 'Pre-made products were removed. Publish any new product or offer now and it will sync in real time to all visitors.',
         hubBadge: 'Support & Community Hub',
         hubTitle: 'Customer Care, Groups & Suggestions',
         talkToStore: 'Chat with Store Owner',
@@ -579,7 +799,7 @@
         legalHeading: 'Legal',
         linkTerms: 'Terms & Conditions',
         linkVerify: 'Account Verification',
-        contactHeading: 'Contact',
+        contactHeading: 'Admin Contact',
         disclaimerTitle: 'Legal Disclaimer: ',
         disclaimerBody: 'Vicks Market is a mediation and connection platform between buyers and sellers only. Management is not responsible for user content or interactions.',
         reviewsTitle: 'Buyer Reviews',
@@ -593,7 +813,7 @@
         uploadFromDevice: 'Upload Photo from Device',
         openCamera: 'Open Camera & Snap',
         visualSearchFormats: 'Supports high-res PNG, JPG',
-        aiWelcome: 'Welcome to VICKS AI! I am your personal assistant inside VICKS MARKET. Ask me anything about stories, reviews, or platform features.',
+        aiWelcome: 'Welcome to VICKS AI! Ask me about publishing offers, stories, VICKS loyalty points, or contacting Official Admin (vicksmarket@gmail.com).',
         aiInputPlaceholder: 'Ask VICKS AI anything...',
         loginHeading: 'Hey, you',
         loginSub: 'Log in to continue to VICKS MARKET',
@@ -618,7 +838,7 @@
         signupSubmit: 'Create Account',
         haveAccount: 'Already have an account?',
         complaintFormTitle: 'Submit a Complaint',
-        complaintFormSub: 'Help us maintain a safe marketplace',
+        complaintFormSub: 'Sent directly to Official Admin (vicksmarket@gmail.com)',
         complaintTargetLabel: 'Reported User ID or Store Name *',
         complaintTypeLabel: 'Complaint Category *',
         complaintDetailsLabel: 'Complaint Details *',
@@ -631,7 +851,7 @@
         suggestionTextLabel: 'Your Suggestion *',
         suggestionSubmitBtn: 'Submit Suggestion',
         groupRoomTitle: 'Vicks Market Group',
-        groupRoomSub: 'Open to everyone • Official Group',
+        groupRoomSub: 'Open to everyone • Moderated by vicksmarket@gmail.com',
         groupEmpty: 'No messages yet — be the first to write!',
         groupPlaceholder: 'Write a message...',
         storyReplyPlaceholder: 'Write a reply...',
@@ -657,30 +877,29 @@
     // -----------------------------------------------------------------------
     // 3. REALTIME DATABASE & FIRESTORE SYNC ADAPTERS
     // -----------------------------------------------------------------------
-    function normalizeStories(rawVal) {
+    function normalizeCollection(rawVal) {
       if (!rawVal) return [];
       const arr = Array.isArray(rawVal)
         ? rawVal.filter(Boolean)
         : Object.entries(rawVal).map(([key, val]) => ({ id: key, ...(val || {}) }));
-      return arr
-        .map((s) => ({
-          ...s,
-          id: s.id || ("story_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6)),
-          replies: Array.isArray(s.replies)
-            ? s.replies
-            : s.replies && typeof s.replies === "object"
-              ? Object.values(s.replies)
-              : [],
-          createdAt: Number(s.createdAt) || 0
-        }))
-        .sort((a, b) => b.createdAt - a.createdAt);
+      return arr.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+    }
+
+    function normalizeStories(rawVal) {
+      return normalizeCollection(rawVal).map((s) => ({
+        ...s,
+        id: s.id || ("story_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6)),
+        replies: Array.isArray(s.replies)
+          ? s.replies
+          : s.replies && typeof s.replies === "object"
+            ? Object.values(s.replies)
+            : [],
+        createdAt: Number(s.createdAt) || 0
+      }));
     }
 
     function normalizeArrayCollection(rawVal, fallbackList = []) {
-      if (!rawVal) return [...fallbackList];
-      const arr = Array.isArray(rawVal)
-        ? rawVal.filter(Boolean)
-        : Object.entries(rawVal).map(([key, val]) => ({ id: key, ...(val || {}) }));
+      const arr = normalizeCollection(rawVal);
       return arr.length > 0 ? arr : [...fallbackList];
     }
 
@@ -691,6 +910,50 @@
       }
 
       try {
+        // Realtime Database: Global Admin Announcement Banner
+        onValue(
+          ref(rtdb, "vicksMarket/announcement"),
+          (snapshot) => {
+            state.syncStatus = "live";
+            const val = snapshot.val();
+            const nextText = val && typeof val.text === "string" ? val.text : "";
+            if (nextText !== state.announcement) {
+              state.announcementDismissed = false;
+            }
+            state.announcement = nextText;
+            saveLocalFallback();
+            renderAnnouncementBanner();
+          },
+          (err) => markFallbackMode(err?.message || "RTDB announcement error")
+        );
+
+        // Realtime Database: Live Community Poll
+        onValue(
+          ref(rtdb, "vicksMarket/poll"),
+          (snapshot) => {
+            state.syncStatus = "live";
+            const val = snapshot.val();
+            if (val && Array.isArray(val.options) && val.options.length > 0) {
+              state.poll = val;
+              saveLocalFallback();
+              renderPollWidget();
+            }
+          },
+          (err) => markFallbackMode(err?.message || "RTDB poll error")
+        );
+
+        // Realtime Database: Dynamic Marketplace Listings
+        onValue(
+          ref(rtdb, "vicksMarket/listings"),
+          (snapshot) => {
+            state.syncStatus = "live";
+            state.listings = normalizeCollection(snapshot.val());
+            saveLocalFallback();
+            renderListings();
+          },
+          (err) => markFallbackMode(err?.message || "RTDB listings error")
+        );
+
         // Realtime Database: Stories & Replies
         onValue(
           ref(rtdb, "vicksMarket/stories"),
@@ -699,7 +962,6 @@
             state.stories = normalizeStories(snapshot.val());
             saveLocalFallback();
             renderStories();
-            updateEmptyAreaState();
             const activeRepliesBox = document.getElementById("storyRepliesPreview");
             if (activeRepliesBox && activeRepliesBox.dataset.storyId) {
               const currentStory = state.stories.find((st) => st.id === activeRepliesBox.dataset.storyId);
@@ -715,9 +977,7 @@
               }
             }
           },
-          (err) => {
-            markFallbackMode(err?.message || "RTDB stories read error");
-          }
+          (err) => markFallbackMode(err?.message || "RTDB stories read error")
         );
 
         // Realtime Database: Group Chat Messages
@@ -734,11 +994,10 @@
             if (chatBox) {
               chatBox.innerHTML = renderGroupMessagesHtml();
               chatBox.scrollTop = chatBox.scrollHeight;
+              lucide.createIcons();
             }
           },
-          (err) => {
-            markFallbackMode(err?.message || "RTDB group read error");
-          }
+          (err) => markFallbackMode(err?.message || "RTDB group read error")
         );
 
         // Firestore: Public Reviews
@@ -754,12 +1013,13 @@
             saveLocalFallback();
             const revListEl = document.getElementById("reviewsListContainer");
             const revCountEl = document.getElementById("reviewsTotalCount");
-            if (revListEl) revListEl.innerHTML = renderReviewsListHtml();
+            if (revListEl) {
+              revListEl.innerHTML = renderReviewsListHtml();
+              lucide.createIcons();
+            }
             if (revCountEl) revCountEl.textContent = String(state.reviews.length);
           },
-          (err) => {
-            markFallbackMode(err?.message || "Firestore reviews read error");
-          }
+          (err) => markFallbackMode(err?.message || "Firestore reviews read error")
         );
 
         // Firestore: Complaints & Suggestions sync
@@ -772,9 +1032,7 @@
             state.complaintsSubmitted = normalizeArrayCollection(list, state.complaintsSubmitted);
             saveLocalFallback();
           },
-          (err) => {
-            markFallbackMode(err?.message || "Firestore complaints read error");
-          }
+          (err) => markFallbackMode(err?.message || "Firestore complaints read error")
         );
 
         onSnapshot(
@@ -786,12 +1044,74 @@
             state.suggestionsSubmitted = normalizeArrayCollection(list, state.suggestionsSubmitted);
             saveLocalFallback();
           },
-          (err) => {
-            markFallbackMode(err?.message || "Firestore suggestions read error");
-          }
+          (err) => markFallbackMode(err?.message || "Firestore suggestions read error")
         );
       } catch (subErr) {
         markFallbackMode(subErr?.message || "Subscription error");
+      }
+    }
+
+    async function persistAnnouncement(text) {
+      state.announcement = text;
+      state.announcementDismissed = false;
+      saveLocalFallback();
+      renderAnnouncementBanner();
+      if (!firebaseReady || !rtdb) return;
+      try {
+        await set(ref(rtdb, "vicksMarket/announcement"), {
+          text,
+          updatedBy: OFFICIAL_ADMIN_EMAIL,
+          updatedAt: Date.now()
+        });
+        await setDoc(doc(db, "artifacts/vicks-market/public/data/settings", "announcement"), {
+          text,
+          updatedBy: OFFICIAL_ADMIN_EMAIL,
+          updatedAt: Date.now()
+        });
+      } catch (err) {
+        markFallbackMode(err?.message || "Announcement write error");
+      }
+    }
+
+    async function persistPoll(pollObj) {
+      state.poll = pollObj;
+      saveLocalFallback();
+      renderPollWidget();
+      if (!firebaseReady || !rtdb) return;
+      try {
+        await set(ref(rtdb, "vicksMarket/poll"), pollObj);
+        await setDoc(doc(db, "artifacts/vicks-market/public/data/settings", "poll"), pollObj);
+      } catch (err) {
+        markFallbackMode(err?.message || "Poll write error");
+      }
+    }
+
+    async function persistListingCreate(listing) {
+      state.listings.unshift(listing);
+      saveLocalFallback();
+      renderListings();
+      if (!firebaseReady || !rtdb) return;
+      try {
+        await set(ref(rtdb, `vicksMarket/listings/${listing.id}`), listing);
+        await setDoc(doc(db, "artifacts/vicks-market/public/data/listings", listing.id), listing);
+      } catch (err) {
+        markFallbackMode(err?.message || "Listing create error");
+      }
+    }
+
+    async function persistListingDelete(listingId) {
+      state.listings = state.listings.filter((l) => l.id !== listingId);
+      state.favorites = state.favorites.filter((fid) => fid !== listingId);
+      state.cart = state.cart.filter((c) => c.listingId !== listingId);
+      saveLocalFallback();
+      renderListings();
+      updateCartBadge();
+      if (!firebaseReady || !rtdb) return;
+      try {
+        await remove(ref(rtdb, `vicksMarket/listings/${listingId}`));
+        await deleteDoc(doc(db, "artifacts/vicks-market/public/data/listings", listingId));
+      } catch (err) {
+        markFallbackMode(err?.message || "Listing delete error");
       }
     }
 
@@ -850,6 +1170,20 @@
       }
     }
 
+    async function persistReviewDelete(reviewId) {
+      state.reviews = state.reviews.filter((r) => r.id !== reviewId);
+      saveLocalFallback();
+      if (!firebaseReady || !db) return;
+      try {
+        await deleteDoc(doc(db, "artifacts/vicks-market/public/data/reviews", reviewId));
+        if (rtdb) {
+          await remove(ref(rtdb, `vicksMarket/reviews/${reviewId}`));
+        }
+      } catch (err) {
+        markFallbackMode(err?.message || "Review delete error");
+      }
+    }
+
     async function persistReviewLike(reviewId, nextLikes) {
       const rev = state.reviews.find((r) => r.id === reviewId);
       if (rev) rev.likes = nextLikes;
@@ -877,6 +1211,18 @@
       }
     }
 
+    async function persistGroupMessageDelete(msgId) {
+      state.groupMessages = state.groupMessages.filter((m) => m.id !== msgId);
+      saveLocalFallback();
+      if (!firebaseReady || !rtdb) return;
+      try {
+        await remove(ref(rtdb, `vicksMarket/groupMessages/${msgId}`));
+        await deleteDoc(doc(db, "artifacts/vicks-market/public/data/groupMessages", msgId));
+      } catch (err) {
+        markFallbackMode(err?.message || "Group message delete error");
+      }
+    }
+
     async function persistComplaint(item) {
       state.complaintsSubmitted.push(item);
       saveLocalFallback();
@@ -888,6 +1234,35 @@
         }
       } catch (err) {
         markFallbackMode(err?.message || "Complaint write error");
+      }
+    }
+
+    async function persistComplaintUpdate(compId, status) {
+      const target = state.complaintsSubmitted.find((c) => c.id === compId);
+      if (target) target.status = status;
+      saveLocalFallback();
+      if (!firebaseReady || !db) return;
+      try {
+        await updateDoc(doc(db, "artifacts/vicks-market/public/data/complaints", compId), { status });
+        if (rtdb) {
+          await update(ref(rtdb, `vicksMarket/complaints/${compId}`), { status });
+        }
+      } catch (err) {
+        markFallbackMode(err?.message || "Complaint update error");
+      }
+    }
+
+    async function persistComplaintDelete(compId) {
+      state.complaintsSubmitted = state.complaintsSubmitted.filter((c) => c.id !== compId);
+      saveLocalFallback();
+      if (!firebaseReady || !db) return;
+      try {
+        await deleteDoc(doc(db, "artifacts/vicks-market/public/data/complaints", compId));
+        if (rtdb) {
+          await remove(ref(rtdb, `vicksMarket/complaints/${compId}`));
+        }
+      } catch (err) {
+        markFallbackMode(err?.message || "Complaint delete error");
       }
     }
 
@@ -905,8 +1280,22 @@
       }
     }
 
+    async function persistSuggestionDelete(suggId) {
+      state.suggestionsSubmitted = state.suggestionsSubmitted.filter((s) => s.id !== suggId);
+      saveLocalFallback();
+      if (!firebaseReady || !db) return;
+      try {
+        await deleteDoc(doc(db, "artifacts/vicks-market/public/data/suggestions", suggId));
+        if (rtdb) {
+          await remove(ref(rtdb, `vicksMarket/suggestions/${suggId}`));
+        }
+      } catch (err) {
+        markFallbackMode(err?.message || "Suggestion delete error");
+      }
+    }
+
     // -----------------------------------------------------------------------
-    // 4. MODAL & TOAST UTILITIES
+    // 4. MODAL, BANNER & TOAST UTILITIES
     // -----------------------------------------------------------------------
     let storyTimerInterval = null;
     let storyPaused = false;
@@ -951,9 +1340,10 @@
       const colorMap = {
         success: "bg-emerald-600 text-white",
         error: "bg-rose-600 text-white",
+        admin: "bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950",
         info: "bg-slate-900 text-white dark:bg-slate-800"
       };
-      toast.className = `animate-pop pointer-events-auto px-4 py-3 rounded-2xl shadow-lg text-xs sm:text-sm font-bold flex items-center gap-2 ${colorMap[type] || colorMap.info}`;
+      toast.className = `animate-pop pointer-events-auto px-4 py-3 rounded-2xl shadow-lg text-xs sm:text-sm font-extrabold flex items-center gap-2 ${colorMap[type] || colorMap.info}`;
       toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
       container.appendChild(toast);
       setTimeout(() => {
@@ -961,7 +1351,7 @@
         toast.style.transform = "translateY(-6px)";
         toast.style.transition = "all 0.2s ease";
         setTimeout(() => toast.remove(), 220);
-      }, 2800);
+      }, 3000);
     }
 
     function escapeHtml(str) {
@@ -971,6 +1361,44 @@
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
+    }
+
+    function renderAnnouncementBanner() {
+      const bar = document.getElementById("globalAnnouncementBar");
+      const textEl = document.getElementById("globalAnnouncementText");
+      if (!bar || !textEl) return;
+
+      if (state.announcement && state.announcement.trim() && !state.announcementDismissed) {
+        textEl.textContent = state.announcement.trim();
+        bar.classList.remove("hidden");
+        lucide.createIcons();
+      } else {
+        bar.classList.add("hidden");
+      }
+    }
+
+    function dismissAnnouncementLocally() {
+      state.announcementDismissed = true;
+      renderAnnouncementBanner();
+    }
+
+    function copyAdminEmail() {
+      const temp = document.createElement("textarea");
+      temp.value = OFFICIAL_ADMIN_EMAIL;
+      document.body.appendChild(temp);
+      temp.select();
+      try {
+        document.execCommand("copy");
+      } catch (_e) {
+        // Fallback if copy blocked
+      }
+      document.body.removeChild(temp);
+      showToast(
+        state.lang === "ar"
+          ? `تم نسخ إيميل المشرف العام: ${OFFICIAL_ADMIN_EMAIL}`
+          : `Copied Official Admin Email: ${OFFICIAL_ADMIN_EMAIL}`,
+        "admin"
+      );
     }
 
     // -----------------------------------------------------------------------
@@ -983,7 +1411,8 @@
       applyLocalization();
       renderCategoryTabs();
       renderStories();
-      updateEmptyAreaState();
+      renderListings();
+      renderPollWidget();
       updateActiveFilterBar();
       lucide.createIcons();
     }
@@ -1011,12 +1440,38 @@
       });
 
       const userBadge = document.getElementById("userBadge");
+      const adminBtn = document.getElementById("adminCommandBtn");
+      const accountIcon = document.getElementById("accountIcon");
+
       if (state.user) {
-        userBadge.textContent = state.user.storeName || "VIP";
+        const admin = isAdminUser();
+        userBadge.textContent = admin
+          ? (state.lang === "ar" ? "👑 المشرف العام" : "👑 Official Admin")
+          : (state.user.storeName || "VIP");
+        userBadge.className = admin
+          ? "text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 shadow-xs"
+          : "text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300";
         userBadge.classList.remove("hidden");
+
+        if (adminBtn) {
+          adminBtn.classList.toggle("hidden", !admin);
+          adminBtn.classList.toggle("flex", admin);
+        }
+        if (accountIcon) {
+          accountIcon.setAttribute("data-lucide", admin ? "crown" : "user-circle-2");
+        }
       } else {
         userBadge.classList.add("hidden");
+        if (adminBtn) {
+          adminBtn.classList.add("hidden");
+          adminBtn.classList.remove("flex");
+        }
+        if (accountIcon) {
+          accountIcon.setAttribute("data-lucide", "user-circle-2");
+        }
       }
+      updatePointsDisplay();
+      updateCartBadge();
     }
 
     // -----------------------------------------------------------------------
@@ -1047,7 +1502,7 @@
       state.category = catId;
       renderCategoryTabs();
       renderStories();
-      updateEmptyAreaState();
+      renderListings();
       updateActiveFilterBar();
     }
 
@@ -1055,7 +1510,7 @@
       state.searchQuery = val.trim().toLowerCase();
       document.getElementById("clearSearchBtn").classList.toggle("hidden", !state.searchQuery);
       renderStories();
-      updateEmptyAreaState();
+      renderListings();
       updateActiveFilterBar();
     }
 
@@ -1068,11 +1523,12 @@
     function resetHome() {
       state.category = "all";
       state.searchQuery = "";
+      state.onlyFavorites = false;
       document.getElementById("searchInput").value = "";
       document.getElementById("clearSearchBtn").classList.add("hidden");
       renderCategoryTabs();
       renderStories();
-      updateEmptyAreaState();
+      renderListings();
       updateActiveFilterBar();
     }
 
@@ -1084,6 +1540,9 @@
       if (state.category !== "all") {
         const catObj = CATEGORIES.find((c) => c.id === state.category);
         if (catObj) parts.push(catObj[state.lang]);
+      }
+      if (state.onlyFavorites) {
+        parts.push(state.lang === "ar" ? "المفضلة فقط" : "Favorites only");
       }
       if (state.searchQuery) {
         parts.push(`"${state.searchQuery}"`);
@@ -1099,42 +1558,791 @@
       }
     }
 
-    function getFilteredStories() {
-      return state.stories.filter((s) => {
-        if (state.category === "offers" && !s.isOffer) return false;
-        if (state.category === "electronics" && s.category !== "electronics") return false;
-        if (state.category === "clothing" && s.category !== "clothing") return false;
+    // -----------------------------------------------------------------------
+    // 7. DYNAMIC USER & ADMIN MARKETPLACE LISTINGS, WISHLIST & CART
+    // -----------------------------------------------------------------------
+    function getFilteredListings() {
+      let list = state.listings.filter((item) => {
+        if (state.category === "offers" && !item.isOffer && item.category !== "offers") return false;
+        if (state.category === "electronics" && item.category !== "electronics") return false;
+        if (state.category === "clothing" && item.category !== "clothing") return false;
+        if (state.onlyFavorites && !state.favorites.includes(item.id)) return false;
 
         if (state.searchQuery) {
           const q = state.searchQuery;
-          const matchAuthor = (s.author || "").toLowerCase().includes(q);
-          const matchCaption = (s.caption || "").toLowerCase().includes(q);
-          const matchEmoji = (s.emoji || "").toLowerCase().includes(q);
-          if (!matchAuthor && !matchCaption && !matchEmoji) return false;
+          const matchTitle = (item.title || "").toLowerCase().includes(q);
+          const matchDesc = (item.description || "").toLowerCase().includes(q);
+          const matchSeller = (item.sellerName || "").toLowerCase().includes(q);
+          if (!matchTitle && !matchDesc && !matchSeller) return false;
         }
         return true;
       });
+
+      if (state.sortBy === "priceAsc") {
+        list = [...list].sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+      } else if (state.sortBy === "priceDesc") {
+        list = [...list].sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+      } else {
+        list = [...list].sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+      }
+      return list;
     }
 
-    function updateEmptyAreaState() {
-      const titleEl = document.getElementById("emptyAreaTitle");
-      const descEl = document.getElementById("emptyAreaDesc");
-      const t = i18n[state.lang];
-      const matchedStories = getFilteredStories();
+    function toggleFavoritesFilter() {
+      state.onlyFavorites = !state.onlyFavorites;
+      renderListings();
+      updateActiveFilterBar();
+    }
 
-      if (state.searchQuery || state.category !== "all") {
-        titleEl.textContent = state.lang === "ar"
-          ? `لا توجد منتجات أو مواقع مطابقة (الحالات المطابقة: ${matchedStories.length})`
-          : `No products or locations match (Matching stories: ${matchedStories.length})`;
-        descEl.textContent = t.noProductsDesc;
+    function handleSortChange(val) {
+      state.sortBy = val;
+      renderListings();
+    }
+
+    function toggleFavoriteItem(listingId) {
+      const idx = state.favorites.indexOf(listingId);
+      if (idx >= 0) {
+        state.favorites.splice(idx, 1);
       } else {
-        titleEl.textContent = t.noProductsTitle;
-        descEl.textContent = t.noProductsDesc;
+        state.favorites.push(listingId);
+        showToast(state.lang === "ar" ? "تمت الإضافة إلى المفضلة ❤️" : "Added to favorites ❤️", "info");
+      }
+      saveLocalFallback();
+      renderListings();
+    }
+
+    function addToCart(listingId) {
+      const item = state.listings.find((l) => l.id === listingId);
+      if (!item) return;
+      const existing = state.cart.find((c) => c.listingId === listingId);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        state.cart.push({
+          listingId: item.id,
+          title: item.title,
+          price: Number(item.price) || 0,
+          seller: item.sellerName,
+          emoji: item.emoji || "🛍️",
+          whatsapp: item.whatsapp || "",
+          qty: 1
+        });
+      }
+      saveLocalFallback();
+      updateCartBadge();
+      showToast(
+        state.lang === "ar" ? `تمت إضافة "${item.title}" للسلة 🛒` : `Added "${item.title}" to cart 🛒`,
+        "success"
+      );
+    }
+
+    function updateCartBadge() {
+      const badge = document.getElementById("cartBadgeCount");
+      const favBadge = document.getElementById("favCountBadge");
+      const totalQty = state.cart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+      if (badge) {
+        badge.textContent = String(totalQty);
+        badge.classList.toggle("hidden", totalQty === 0);
+      }
+      if (favBadge) {
+        favBadge.textContent = String(state.favorites.length);
       }
     }
 
+    function renderListings() {
+      const container = document.getElementById("liveListingsGrid");
+      if (!container) return;
+      const t = i18n[state.lang];
+      updateCartBadge();
+
+      const favBtn = document.getElementById("favFilterBtn");
+      if (favBtn) {
+        favBtn.className = `px-3 py-2 rounded-xl border text-xs font-extrabold flex items-center gap-1.5 transition ${
+          state.onlyFavorites
+            ? "border-rose-400 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+            : "border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800"
+        }`;
+      }
+
+      const items = getFilteredListings();
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="rounded-2xl p-8 sm:p-10 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-3 bg-slate-50/50 dark:bg-slate-800/30">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-vicks-500 flex items-center justify-center">
+              <i data-lucide="sparkles" class="w-7 h-7"></i>
+            </div>
+            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">${t.emptyListingsTitle}</h3>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">${t.emptyListingsDesc}</p>
+            <div class="pt-1">
+              <button
+                type="button"
+                onclick="openPublishListingModal()"
+                class="px-5 py-2.5 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-xs sm:text-sm font-extrabold inline-flex items-center gap-2 shadow-sm shadow-orange-500/20 transition"
+              >
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>${t.addProductOfferBtn}</span>
+              </button>
+            </div>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      const adminActive = isAdminUser();
+      container.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${items.map((item) => {
+            const isFav = state.favorites.includes(item.id);
+            const canDelete = adminActive || (state.user && state.user.email === item.sellerEmail);
+            const catObj = CATEGORIES.find((c) => c.id === item.category) || CATEGORIES[0];
+            return `
+              <article class="rounded-2xl border ${item.isAdminFeatured ? "border-amber-400/80 dark:border-amber-500/50 ring-1 ring-amber-400/30" : "border-slate-200/80 dark:border-slate-800"} bg-white dark:bg-slate-900 overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col">
+                <div class="relative h-44 bg-gradient-to-br from-orange-50 via-amber-50 to-slate-100 dark:from-slate-800 dark:via-slate-800/80 dark:to-slate-900 flex items-center justify-center overflow-hidden">
+                  ${item.imageUrl ? `
+                    <img
+                      src="${escapeHtml(item.imageUrl)}"
+                      alt="${escapeHtml(item.title)}"
+                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                      class="w-full h-full object-cover"
+                    />
+                    <div style="display:none" class="w-full h-full items-center justify-center text-5xl">${escapeHtml(item.emoji || "🛍️")}</div>
+                  ` : `
+                    <div class="text-5xl select-none">${escapeHtml(item.emoji || "🛍️")}</div>
+                  `}
+
+                  <div class="absolute top-2.5 start-2.5 flex items-center gap-1.5 flex-wrap">
+                    <span class="px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold">
+                      ${escapeHtml(catObj[state.lang])}
+                    </span>
+                    ${item.isAdminFeatured ? `
+                      <span class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 text-[10px] font-extrabold flex items-center gap-1">
+                        <i data-lucide="crown" class="w-3 h-3"></i>
+                        <span>${state.lang === "ar" ? "معتمد من الإدارة" : "Admin Featured"}</span>
+                      </span>
+                    ` : ""}
+                  </div>
+
+                  <div class="absolute top-2.5 end-2.5 flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onclick="toggleFavoriteItem('${item.id}')"
+                      class="p-2 rounded-xl bg-white/90 dark:bg-slate-900/90 shadow-xs hover:scale-105 transition"
+                      title="Favorite"
+                    >
+                      <i data-lucide="heart" class="w-4 h-4 ${isFav ? "fill-rose-500 text-rose-500" : "text-slate-500"}"></i>
+                    </button>
+                    ${canDelete ? `
+                      <button
+                        type="button"
+                        onclick="persistListingDelete('${item.id}')"
+                        class="p-2 rounded-xl bg-rose-600 text-white shadow-xs hover:bg-rose-700 transition"
+                        title="${state.lang === "ar" ? "حذف العرض" : "Delete Listing"}"
+                      >
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    ` : ""}
+                  </div>
+                </div>
+
+                <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+                  <div class="space-y-1.5">
+                    <div class="flex items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                      <span class="font-bold flex items-center gap-1 truncate">
+                        <i data-lucide="${item.isAdminFeatured ? "shield-check" : "store"}" class="w-3.5 h-3.5 text-vicks-500"></i>
+                        <span>${escapeHtml(item.sellerName)}</span>
+                      </span>
+                      <span class="font-extrabold text-sm sm:text-base text-vicks-600 dark:text-orange-400 shrink-0">
+                        ${Number(item.price).toLocaleString()} ${state.lang === "ar" ? "ج.م" : "EGP"}
+                      </span>
+                    </div>
+                    <h3 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white line-clamp-1">${escapeHtml(item.title)}</h3>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">${escapeHtml(item.description || "")}</p>
+                  </div>
+
+                  <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onclick="addToCart('${item.id}')"
+                      class="flex-1 py-2.5 px-3 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95"
+                    >
+                      <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
+                      <span>${state.lang === "ar" ? "أضف للسلة" : "Add to Cart"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onclick="openListingDetailModal('${item.id}')"
+                      class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition"
+                      title="${state.lang === "ar" ? "التفاصيل والتواصل" : "Details & Contact"}"
+                    >
+                      <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function openPublishListingModal() {
+      const admin = isAdminUser();
+      const defaultSeller = admin
+        ? (state.lang === "ar" ? "إدارة VICKS MARKET الرسمية" : "VICKS MARKET Official Admin")
+        : (state.user ? state.user.name : (state.lang === "ar" ? "بائع فيكس ماركت" : "VICKS Seller"));
+
+      openModal(`
+        <div class="p-5 sm:p-6 space-y-4">
+          <div class="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div>
+              <h3 class="text-lg font-extrabold flex items-center gap-2">
+                <i data-lucide="plus-square" class="w-5 h-5 text-vicks-500"></i>
+                <span>${state.lang === "ar" ? "نشر منتج أو عرض جديد" : "Publish New Product / Offer"}</span>
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                ${state.lang === "ar" ? "يظهر فوراً لكل الزوار (+25 نقطة فيكس)" : "Syncs live to all visitors (+25 VICKS Points)"}
+              </p>
+            </div>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <form onsubmit="handlePublishListingSubmit(event)" class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-extrabold mb-1">${state.lang === "ar" ? "اسم المنتج / العرض *" : "Product / Offer Title *"}</label>
+                <input id="listTitle" type="text" required placeholder="${state.lang === "ar" ? "مثال: سماعة لاسلكية برو" : "e.g. Wireless Pro Headset"}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold mb-1">${state.lang === "ar" ? "السعر (ج.م) *" : "Price (EGP) *"}</label>
+                <input id="listPrice" type="number" min="1" required placeholder="500" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-extrabold mb-1">${state.lang === "ar" ? "القسم" : "Category"}</label>
+                <select id="listCategory" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500">
+                  <option value="offers">${state.lang === "ar" ? "عروض اليوم" : "Today's Offers"}</option>
+                  <option value="electronics">${state.lang === "ar" ? "إلكترونيات" : "Electronics"}</option>
+                  <option value="clothing">${state.lang === "ar" ? "ملابس" : "Clothing"}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold mb-1">${state.lang === "ar" ? "اسم البائع / المتجر" : "Seller / Store Name"}</label>
+                <input id="listSeller" type="text" value="${escapeHtml(defaultSeller)}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-extrabold mb-1">${state.lang === "ar" ? "وصف المنتج أو تفاصيل العرض *" : "Description *"}</label>
+              <textarea id="listDesc" rows="2" required placeholder="${state.lang === "ar" ? "اكتب المواصفات والحالة وطريقة التسليم..." : "Specs, condition, delivery details..."}" class="w-full p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-extrabold mb-1">${state.lang === "ar" ? "رقم واتساب للتواصل (اختياري)" : "WhatsApp Number (Optional)"}</label>
+                <input id="listWhatsapp" type="text" placeholder="2010XXXXXXXX" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-extrabold mb-1">${state.lang === "ar" ? "رابط صورة (اختياري)" : "Image URL (Optional)"}</label>
+                <input id="listImage" type="url" placeholder="https://..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+              </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-sm font-extrabold flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 transition">
+              <i data-lucide="rocket" class="w-4 h-4"></i>
+              <span>${state.lang === "ar" ? "نشر الآن للجميع" : "Publish Live Now"}</span>
+            </button>
+          </form>
+        </div>
+      `, "max-w-lg");
+    }
+
+    async function handlePublishListingSubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById("listTitle").value.trim();
+      const price = Number(document.getElementById("listPrice").value) || 0;
+      const category = document.getElementById("listCategory").value;
+      const sellerName = document.getElementById("listSeller").value.trim() || "VICKS Seller";
+      const description = document.getElementById("listDesc").value.trim();
+      const whatsapp = document.getElementById("listWhatsapp").value.trim();
+      const imageUrl = document.getElementById("listImage").value.trim();
+      const admin = isAdminUser();
+
+      const emojiMap = { offers: "🔥", electronics: "📱", clothing: "👕" };
+
+      const listingObj = {
+        id: "item_" + Date.now(),
+        title,
+        price,
+        category,
+        isOffer: category === "offers",
+        sellerName,
+        sellerEmail: state.user ? state.user.email : "",
+        isAdminFeatured: admin,
+        description,
+        whatsapp,
+        imageUrl,
+        emoji: emojiMap[category] || "🛍️",
+        createdAt: Date.now()
+      };
+
+      await persistListingCreate(listingObj);
+      closeModal();
+      addVicksPoints(25, "نشر عرض جديد", "Published new offer");
+    }
+
+    function openListingDetailModal(listingId) {
+      const item = state.listings.find((l) => l.id === listingId);
+      if (!item) return;
+      const waClean = (item.whatsapp || "").replace(/\D/g, "");
+      const waHref = waClean ? `https://wa.me/${waClean}?text=${encodeURIComponent(`مرحباً، بخصوص عرضك على VICKS MARKET: ${item.title}`)}` : "";
+
+      openModal(`
+        <div class="p-5 sm:p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <span class="text-xs font-extrabold text-vicks-600 dark:text-orange-400 flex items-center gap-1.5">
+              <i data-lucide="store" class="w-4 h-4"></i>
+              <span>${escapeHtml(item.sellerName)}</span>
+            </span>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <div class="h-48 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+            ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.title)}" onerror="this.style.display='none'" class="w-full h-full object-cover" />` : `<span class="text-6xl">${escapeHtml(item.emoji || "🛍️")}</span>`}
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-lg font-extrabold">${escapeHtml(item.title)}</h3>
+              <span class="text-lg font-extrabold text-vicks-600 dark:text-orange-400">${Number(item.price).toLocaleString()} ${state.lang === "ar" ? "ج.م" : "EGP"}</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(item.description)}</p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-2 pt-2">
+            <button type="button" onclick="addToCart('${item.id}'); closeModal();" class="flex-1 py-3 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2">
+              <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+              <span>${state.lang === "ar" ? "إضافة إلى السلة" : "Add to Cart"}</span>
+            </button>
+            ${waHref ? `
+              <a href="${waHref}" target="_blank" rel="noopener noreferrer" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2">
+                <i data-lucide="message-circle" class="w-4 h-4"></i>
+                <span>${state.lang === "ar" ? "تواصل واتساب" : "WhatsApp Seller"}</span>
+              </a>
+            ` : ""}
+          </div>
+        </div>
+      `, "max-w-md");
+    }
+
+    function openCartModal() {
+      const total = state.cart.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 1), 0);
+      openModal(`
+        <div class="p-5 sm:p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <h3 class="text-lg font-extrabold flex items-center gap-2">
+              <i data-lucide="shopping-cart" class="w-5 h-5 text-vicks-500"></i>
+              <span>${state.lang === "ar" ? "سلة المشتريات" : "Shopping Cart"}</span>
+            </h3>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          ${state.cart.length === 0 ? `
+            <div class="py-10 text-center text-slate-400 space-y-2">
+              <i data-lucide="shopping-bag" class="w-10 h-10 mx-auto opacity-50"></i>
+              <p class="text-sm font-bold">${state.lang === "ar" ? "السلة فارغة حالياً" : "Your cart is empty"}</p>
+            </div>
+          ` : `
+            <div class="space-y-2.5 max-h-64 overflow-y-auto">
+              ${state.cart.map((c, idx) => `
+                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 flex items-center justify-between gap-2">
+                  <div class="min-w-0">
+                    <div class="font-extrabold text-xs sm:text-sm truncate">${escapeHtml(c.emoji)} ${escapeHtml(c.title)}</div>
+                    <div class="text-[11px] text-slate-500">${Number(c.price).toLocaleString()} × ${c.qty}</div>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button" onclick="changeCartQty(${idx}, -1)" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-extrabold text-xs">-</button>
+                    <span class="text-xs font-extrabold w-5 text-center">${c.qty}</span>
+                    <button type="button" onclick="changeCartQty(${idx}, 1)" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-extrabold text-xs">+</button>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-orange-50 dark:bg-orange-950/40 flex items-center justify-between font-extrabold">
+              <span class="text-xs sm:text-sm">${state.lang === "ar" ? "الإجمالي الكلي:" : "Total Amount:"}</span>
+              <span class="text-base sm:text-lg text-vicks-600 dark:text-orange-400">${total.toLocaleString()} ${state.lang === "ar" ? "ج.م" : "EGP"}</span>
+            </div>
+
+            <button type="button" onclick="completeCartOrder()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-extrabold flex items-center justify-center gap-2 transition">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+              <span>${state.lang === "ar" ? "تأكيد الطلب السريع (+30 نقطة)" : "Confirm Quick Order (+30 pts)"}</span>
+            </button>
+          `}
+        </div>
+      `, "max-w-md");
+    }
+
+    function changeCartQty(index, delta) {
+      if (!state.cart[index]) return;
+      state.cart[index].qty += delta;
+      if (state.cart[index].qty <= 0) {
+        state.cart.splice(index, 1);
+      }
+      saveLocalFallback();
+      updateCartBadge();
+      openCartModal();
+    }
+
+    function completeCartOrder() {
+      state.cart = [];
+      saveLocalFallback();
+      updateCartBadge();
+      closeModal();
+      addVicksPoints(30, "إتمام طلب بنجاح", "Completed order");
+    }
+
     // -----------------------------------------------------------------------
-    // 7. ADD STORY & INTERACTIVE STORY VIEWER MODAL
+    // 8. LIVE INTERACTIVE POLL & VIP POINTS MODAL
+    // -----------------------------------------------------------------------
+    function renderPollWidget() {
+      const box = document.getElementById("livePollWidget");
+      if (!box || !state.poll) return;
+
+      const totalVotes = state.poll.options.reduce((acc, o) => acc + (Number(o.votes) || 0), 0);
+      const qText = state.lang === "ar" ? state.poll.questionAr : state.poll.questionEn;
+
+      box.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-vicks-500 text-white text-[10px] font-extrabold">
+              ${state.lang === "ar" ? "تصويت مباشر" : "LIVE POLL"}
+            </span>
+            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(qText)}</h3>
+          </div>
+          <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+            ${totalVotes} ${state.lang === "ar" ? "صوت" : "votes"}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          ${state.poll.options.map((opt) => {
+            const votes = Number(opt.votes) || 0;
+            const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+            const isVoted = state.votedOptionId === opt.id;
+            return `
+              <button
+                type="button"
+                onclick="voteOnPoll('${opt.id}')"
+                class="relative overflow-hidden p-3 rounded-xl border text-start transition ${
+                  isVoted
+                    ? "border-vicks-500 bg-orange-50/90 dark:bg-orange-950/50"
+                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-vicks-400"
+                }"
+              >
+                <div class="absolute inset-y-0 start-0 bg-vicks-500/15 transition-all duration-300" style="width: ${pct}%"></div>
+                <div class="relative flex items-center justify-between gap-2 text-xs font-extrabold">
+                  <span class="truncate">${escapeHtml(state.lang === "ar" ? opt.ar : opt.en)}</span>
+                  <span class="text-vicks-600 dark:text-orange-400 shrink-0">${pct}%</span>
+                </div>
+              </button>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    async function voteOnPoll(optionId) {
+      if (state.votedOptionId === optionId) return;
+      const nextOptions = state.poll.options.map((opt) => {
+        let votes = Number(opt.votes) || 0;
+        if (opt.id === state.votedOptionId) votes = Math.max(0, votes - 1);
+        if (opt.id === optionId) votes += 1;
+        return { ...opt, votes };
+      });
+      const firstVote = !state.votedOptionId;
+      state.votedOptionId = optionId;
+      await persistPoll({ ...state.poll, options: nextOptions });
+      if (firstVote) {
+        addVicksPoints(10, "المشاركة في التصويت", "Poll vote");
+      }
+    }
+
+    function openPointsModal() {
+      const tier = getVipTierInfo();
+      openModal(`
+        <div class="p-6 text-center space-y-4">
+          <div class="flex justify-end">
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg -mt-4">
+            <i data-lucide="award" class="w-8 h-8"></i>
+          </div>
+          <div class="space-y-1">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-extrabold ${tier.badgeClass}">
+              ${state.lang === "ar" ? tier.ar : tier.en}
+            </span>
+            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white pt-1">
+              ${state.points} <span class="text-sm text-vicks-500">${state.lang === "ar" ? "نقطة فيكس" : "VICKS Points"}</span>
+            </h3>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 text-start text-xs space-y-2 text-slate-600 dark:text-slate-300">
+            <div class="font-extrabold text-slate-900 dark:text-white">${state.lang === "ar" ? "كيف تكسب المزيد من النقاط؟" : "How to earn more points:"}</div>
+            <div>• ${state.lang === "ar" ? "نشر منتج أو عرض جديد: +25 نقطة" : "Publish a product/offer: +25 pts"}</div>
+            <div>• ${state.lang === "ar" ? "إضافة حالة جديدة: +15 نقطة" : "Add a new story: +15 pts"}</div>
+            <div>• ${state.lang === "ar" ? "كتابة تقييم أو التصويت: +10 نقاط" : "Post a review or vote: +10 pts"}</div>
+          </div>
+        </div>
+      `, "max-w-sm");
+    }
+
+    // -----------------------------------------------------------------------
+    // 9. OFFICIAL ADMIN COMMAND CENTER (vicksmarket@gmail.com)
+    // -----------------------------------------------------------------------
+    function openAdminDashboardModal(activeTab = "overview") {
+      if (!isAdminUser()) {
+        showToast(
+          state.lang === "ar"
+            ? `هذه اللوحة مخصصة لإيميل المشرف العام فقط: ${OFFICIAL_ADMIN_EMAIL}`
+            : `Admin access is restricted to: ${OFFICIAL_ADMIN_EMAIL}`,
+          "error"
+        );
+        return;
+      }
+
+      openModal(`
+        <div class="flex flex-col max-h-[88vh]">
+          <div class="p-4 sm:p-5 border-b border-amber-200/70 dark:border-slate-800 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center shadow-sm">
+                <i data-lucide="crown" class="w-5 h-5 stroke-[2.4]"></i>
+              </div>
+              <div>
+                <h3 class="font-extrabold text-sm sm:text-base flex items-center gap-1.5">
+                  <span>${state.lang === "ar" ? "لوحة تحكم المشرف العام" : "Official Admin Command Center"}</span>
+                  <span class="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-extrabold">SUPER ADMIN</span>
+                </h3>
+                <p class="text-[11px] font-bold text-amber-700 dark:text-amber-300">${OFFICIAL_ADMIN_EMAIL}</p>
+              </div>
+            </div>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <!-- Admin Navigation Tabs -->
+          <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <button type="button" onclick="switchAdminTab('overview')" id="adminTab-overview" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0">${state.lang === "ar" ? "الإعلانات والتصويت" : "Banner & Poll"}</button>
+            <button type="button" onclick="switchAdminTab('moderation')" id="adminTab-moderation" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0">${state.lang === "ar" ? "إدارة المحتوى" : "Moderation"}</button>
+            <button type="button" onclick="switchAdminTab('reports')" id="adminTab-reports" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0">${state.lang === "ar" ? `الشكاوى (${state.complaintsSubmitted.length})` : `Complaints (${state.complaintsSubmitted.length})`}</button>
+          </div>
+
+          <div class="p-5 overflow-y-auto flex-1 space-y-4">
+            <!-- TAB 1: KPIs, GLOBAL ANNOUNCEMENT & POLL EDITOR -->
+            <div id="adminPanel-overview" class="space-y-4">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div class="p-3 rounded-2xl bg-orange-50 dark:bg-slate-800 text-center">
+                  <div class="text-lg font-extrabold text-vicks-600 dark:text-orange-400">${state.listings.length}</div>
+                  <div class="text-[11px] font-bold text-slate-500">${state.lang === "ar" ? "العروض" : "Listings"}</div>
+                </div>
+                <div class="p-3 rounded-2xl bg-amber-50 dark:bg-slate-800 text-center">
+                  <div class="text-lg font-extrabold text-amber-600 dark:text-amber-400">${state.stories.length}</div>
+                  <div class="text-[11px] font-bold text-slate-500">${state.lang === "ar" ? "الحالات" : "Stories"}</div>
+                </div>
+                <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-slate-800 text-center">
+                  <div class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">${state.reviews.length}</div>
+                  <div class="text-[11px] font-bold text-slate-500">${state.lang === "ar" ? "التقييمات" : "Reviews"}</div>
+                </div>
+                <div class="p-3 rounded-2xl bg-rose-50 dark:bg-slate-800 text-center">
+                  <div class="text-lg font-extrabold text-rose-600 dark:text-rose-400">${state.complaintsSubmitted.length}</div>
+                  <div class="text-[11px] font-bold text-slate-500">${state.lang === "ar" ? "الشكاوى" : "Reports"}</div>
+                </div>
+              </div>
+
+              <!-- Global Announcement Banner Manager -->
+              <form onsubmit="handleAdminSaveAnnouncement(event)" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                <label class="block text-xs font-extrabold flex items-center gap-1.5">
+                  <i data-lucide="megaphone" class="w-4 h-4 text-vicks-500"></i>
+                  <span>${state.lang === "ar" ? "شريط الإعلان العام لكل الزوار (يتزامن فوراً)" : "Global Visitor Banner (Live Sync)"}</span>
+                </label>
+                <input
+                  id="adminAnnouncementInput"
+                  type="text"
+                  value="${escapeHtml(state.announcement)}"
+                  placeholder="${state.lang === "ar" ? "اكتب إعلاناً عاجلاً أو ترحيباً ليظهر أعلى الموقع للجميع..." : "Write a breaking announcement for all visitors..."}"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                />
+                <div class="flex gap-2">
+                  <button type="submit" class="flex-1 py-2.5 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-xs font-extrabold transition">
+                    ${state.lang === "ar" ? "نشر الإعلان للجميع" : "Publish Banner"}
+                  </button>
+                  <button type="button" onclick="handleAdminClearAnnouncement()" class="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 text-xs font-extrabold transition">
+                    ${state.lang === "ar" ? "إخفاء" : "Clear"}
+                  </button>
+                </div>
+              </form>
+
+              <!-- Live Poll Question Updater -->
+              <form onsubmit="handleAdminUpdatePoll(event)" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                <label class="block text-xs font-extrabold flex items-center gap-1.5">
+                  <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-500"></i>
+                  <span>${state.lang === "ar" ? "تحديث سؤال التصويت التفاعلي" : "Update Live Community Poll"}</span>
+                </label>
+                <input
+                  id="adminPollQuestionInput"
+                  type="text"
+                  value="${escapeHtml(state.poll.questionAr)}"
+                  required
+                  class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold outline-none"
+                />
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-amber-500 dark:text-slate-950 text-white text-xs font-extrabold transition">
+                  ${state.lang === "ar" ? "تحديث التصويت وإعادة ضبط الأصوات" : "Update Poll & Reset Votes"}
+                </button>
+              </form>
+            </div>
+
+            <!-- TAB 2: CONTENT MODERATION (STORIES, LISTINGS, REVIEWS, CHAT) -->
+            <div id="adminPanel-moderation" class="hidden space-y-3">
+              <h4 class="text-xs font-extrabold text-slate-500 uppercase">${state.lang === "ar" ? "الحالات النشطة" : "Active Stories"} (${state.stories.length})</h4>
+              <div class="space-y-2 max-h-40 overflow-y-auto">
+                ${state.stories.length === 0 ? `<p class="text-xs text-slate-400">${state.lang === "ar" ? "لا توجد حالات" : "No stories"}</p>` : state.stories.map((s) => `
+                  <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-between gap-2 text-xs">
+                    <span class="truncate font-bold">${escapeHtml(s.emoji)} ${escapeHtml(s.author)}: ${escapeHtml(s.caption)}</span>
+                    <button type="button" onclick="adminDeleteStory('${s.id}')" class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold shrink-0">${state.lang === "ar" ? "حذف" : "Delete"}</button>
+                  </div>
+                `).join("")}
+              </div>
+
+              <h4 class="text-xs font-extrabold text-slate-500 uppercase pt-2">${state.lang === "ar" ? "التقييمات المنشورة" : "Published Reviews"} (${state.reviews.length})</h4>
+              <div class="space-y-2 max-h-40 overflow-y-auto">
+                ${state.reviews.map((r) => `
+                  <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-between gap-2 text-xs">
+                    <span class="truncate"><strong>${escapeHtml(r.author)}:</strong> ${escapeHtml(r.text)}</span>
+                    <button type="button" onclick="adminDeleteReview('${r.id}')" class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold shrink-0">${state.lang === "ar" ? "حذف" : "Delete"}</button>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+
+            <!-- TAB 3: COMPLAINTS & SUGGESTIONS INBOX -->
+            <div id="adminPanel-reports" class="hidden space-y-3">
+              <h4 class="text-xs font-extrabold text-rose-600">${state.lang === "ar" ? "الشكاوى الواردة" : "Incoming Complaints"} (${state.complaintsSubmitted.length})</h4>
+              <div class="space-y-2 max-h-48 overflow-y-auto">
+                ${state.complaintsSubmitted.length === 0 ? `<p class="text-xs text-slate-400">${state.lang === "ar" ? "لا توجد شكاوى حالياً" : "No complaints yet"}</p>` : state.complaintsSubmitted.map((c) => `
+                  <div class="p-3 rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 space-y-1.5 text-xs">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="font-extrabold">${escapeHtml(c.target)} • ${escapeHtml(c.type)}</span>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${c.status === "resolved" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-800"}">
+                        ${c.status === "resolved" ? (state.lang === "ar" ? "تم الحل" : "Resolved") : (state.lang === "ar" ? "قيد المراجعة" : "Pending")}
+                      </span>
+                    </div>
+                    <p class="text-slate-600 dark:text-slate-300">${escapeHtml(c.details)}</p>
+                    <div class="flex items-center gap-2 pt-1">
+                      <button type="button" onclick="adminResolveComplaint('${c.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold">${state.lang === "ar" ? "تحديد كمحلول" : "Mark Resolved"}</button>
+                      <button type="button" onclick="adminDeleteComplaint('${c.id}')" class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 font-bold">${state.lang === "ar" ? "حذف" : "Delete"}</button>
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+
+              <h4 class="text-xs font-extrabold text-amber-600 pt-2">${state.lang === "ar" ? "الاقتراحات الواردة" : "Incoming Suggestions"} (${state.suggestionsSubmitted.length})</h4>
+              <div class="space-y-2 max-h-40 overflow-y-auto">
+                ${state.suggestionsSubmitted.length === 0 ? `<p class="text-xs text-slate-400">${state.lang === "ar" ? "لا توجد اقتراحات حالياً" : "No suggestions yet"}</p>` : state.suggestionsSubmitted.map((sg) => `
+                  <div class="p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 flex items-center justify-between gap-2 text-xs">
+                    <span class="truncate"><strong>${escapeHtml(sg.name)}:</strong> ${escapeHtml(sg.text)}</span>
+                    <button type="button" onclick="adminDeleteSuggestion('${sg.id}')" class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 font-bold shrink-0">${state.lang === "ar" ? "حذف" : "Delete"}</button>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          </div>
+        </div>
+      `, "max-w-xl");
+
+      switchAdminTab(activeTab);
+    }
+
+    function switchAdminTab(tab) {
+      ["overview", "moderation", "reports"].forEach((key) => {
+        const panel = document.getElementById(`adminPanel-${key}`);
+        const btn = document.getElementById(`adminTab-${key}`);
+        const isActive = key === tab;
+        if (panel) panel.classList.toggle("hidden", !isActive);
+        if (btn) {
+          btn.className = `px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 transition ${
+            isActive
+              ? "bg-amber-400 text-slate-950 shadow-xs"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+          }`;
+        }
+      });
+      lucide.createIcons();
+    }
+
+    async function handleAdminSaveAnnouncement(e) {
+      e.preventDefault();
+      const val = document.getElementById("adminAnnouncementInput").value.trim();
+      await persistAnnouncement(val);
+      showToast(state.lang === "ar" ? "تم نشر الإعلان العام لجميع الزوار!" : "Global announcement published!", "admin");
+    }
+
+    async function handleAdminClearAnnouncement() {
+      await persistAnnouncement("");
+      const input = document.getElementById("adminAnnouncementInput");
+      if (input) input.value = "";
+      showToast(state.lang === "ar" ? "تم إخفاء الإعلان العام." : "Global announcement cleared.", "info");
+    }
+
+    async function handleAdminUpdatePoll(e) {
+      e.preventDefault();
+      const q = document.getElementById("adminPollQuestionInput").value.trim();
+      if (!q) return;
+      const resetOptions = state.poll.options.map((o) => ({ ...o, votes: 0 }));
+      state.votedOptionId = null;
+      await persistPoll({ ...state.poll, questionAr: q, questionEn: q, options: resetOptions });
+      showToast(state.lang === "ar" ? "تم تحديث التصويت المباشر!" : "Live poll updated!", "admin");
+    }
+
+    async function adminDeleteStory(storyId) {
+      await persistStoryDelete(storyId);
+      renderStories();
+      openAdminDashboardModal("moderation");
+    }
+
+    async function adminDeleteReview(revId) {
+      await persistReviewDelete(revId);
+      openAdminDashboardModal("moderation");
+    }
+
+    async function adminResolveComplaint(compId) {
+      await persistComplaintUpdate(compId, "resolved");
+      openAdminDashboardModal("reports");
+    }
+
+    async function adminDeleteComplaint(compId) {
+      await persistComplaintDelete(compId);
+      openAdminDashboardModal("reports");
+    }
+
+    async function adminDeleteSuggestion(suggId) {
+      await persistSuggestionDelete(suggId);
+      openAdminDashboardModal("reports");
+    }
+
+    // -----------------------------------------------------------------------
+    // 10. ADD STORY & INTERACTIVE STORY VIEWER MODAL
     // -----------------------------------------------------------------------
     function renderStories() {
       const container = document.getElementById("storiesContainer");
@@ -1171,12 +2379,12 @@
 
         return `
           <button type="button" onclick="openStoryModal('${s.id}')" class="flex flex-col items-center gap-1.5 shrink-0 group focus:outline-none">
-            <div class="w-16 h-16 sm:w-[70px] sm:h-[70px] rounded-full p-0.5 bg-gradient-to-tr from-amber-400 via-vicks-500 to-rose-500 group-hover:scale-105 transition-transform">
+            <div class="w-16 h-16 sm:w-[70px] sm:h-[70px] rounded-full p-0.5 ${s.isAdminStory ? "bg-gradient-to-tr from-amber-300 via-yellow-500 to-orange-600" : "bg-gradient-to-tr from-amber-400 via-vicks-500 to-rose-500"} group-hover:scale-105 transition-transform">
               <div class="w-full h-full rounded-full border-2 border-white dark:border-slate-900 overflow-hidden flex items-center justify-center">
                 ${badgeContent}
               </div>
             </div>
-            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 max-w-[78px] truncate">${escapeHtml(s.author)}</span>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 max-w-[78px] truncate">${s.isAdminStory ? "👑 " : ""}${escapeHtml(s.author)}</span>
           </button>
         `;
       }).join("");
@@ -1185,10 +2393,30 @@
       lucide.createIcons();
     }
 
+    function getFilteredStories() {
+      return state.stories.filter((s) => {
+        if (state.category === "offers" && !s.isOffer) return false;
+        if (state.category === "electronics" && s.category !== "electronics") return false;
+        if (state.category === "clothing" && s.category !== "clothing") return false;
+
+        if (state.searchQuery) {
+          const q = state.searchQuery;
+          const matchAuthor = (s.author || "").toLowerCase().includes(q);
+          const matchCaption = (s.caption || "").toLowerCase().includes(q);
+          const matchEmoji = (s.emoji || "").toLowerCase().includes(q);
+          if (!matchAuthor && !matchCaption && !matchEmoji) return false;
+        }
+        return true;
+      });
+    }
+
     function openAddStoryModal() {
       const t = i18n[state.lang];
-      const defaultAuthor = state.user ? state.user.name : (state.lang === "ar" ? "حالتي" : "My Story");
-      const emojis = ["✨", "🔥", "🎉", "🛍️", "💡", "💬"];
+      const admin = isAdminUser();
+      const defaultAuthor = admin
+        ? (state.lang === "ar" ? "إدارة VICKS MARKET" : "VICKS MARKET Admin")
+        : (state.user ? state.user.name : (state.lang === "ar" ? "حالتي" : "My Story"));
+      const emojis = ["✨", "🔥", "🎉", "🛍️", "💡", "👑"];
 
       openModal(`
         <div class="p-5 sm:p-6 space-y-4">
@@ -1296,6 +2524,7 @@
         emoji: selectedEmoji ? selectedEmoji.value : "✨",
         bgId: selectedBg ? selectedBg.value : "sunset",
         imageUrl,
+        isAdminStory: isAdminUser(),
         category: state.category === "all" ? "offers" : state.category,
         isOffer: state.category === "offers",
         createdAt: Date.now(),
@@ -1304,12 +2533,8 @@
 
       await persistStoryCreate(newStory);
       renderStories();
-      updateEmptyAreaState();
       closeModal();
-      showToast(
-        state.lang === "ar" ? "تم نشر الحالة ومزامنتها للجميع!" : "Story published and synced live!",
-        "success"
-      );
+      addVicksPoints(15, "إضافة حالة جديدة", "Added new story");
     }
 
     function openStoryModal(storyId) {
@@ -1333,8 +2558,8 @@
                 ${escapeHtml(story.emoji || "✨")}
               </div>
               <div class="min-w-0">
-                <div class="font-extrabold text-sm truncate">${escapeHtml(story.author)}</div>
-                <div class="text-[11px] text-slate-300">${state.lang === "ar" ? "حالة نشطة" : "Active Story"}</div>
+                <div class="font-extrabold text-sm truncate">${story.isAdminStory ? "👑 " : ""}${escapeHtml(story.author)}</div>
+                <div class="text-[11px] text-slate-300">${story.isAdminStory ? (state.lang === "ar" ? "حالة رسمية من الإدارة" : "Official Admin Story") : (state.lang === "ar" ? "حالة نشطة" : "Active Story")}</div>
               </div>
             </div>
 
@@ -1430,12 +2655,8 @@
     async function deleteStory(storyId) {
       await persistStoryDelete(storyId);
       renderStories();
-      updateEmptyAreaState();
       closeModal();
-      showToast(
-        state.lang === "ar" ? "تم حذف الحالة." : "Story deleted.",
-        "info"
-      );
+      showToast(state.lang === "ar" ? "تم حذف الحالة." : "Story deleted.", "info");
     }
 
     async function sendStoryReply(e, storyId) {
@@ -1444,7 +2665,9 @@
       const msg = input.value.trim();
       if (!msg) return;
 
-      const sender = state.user ? state.user.name : (state.lang === "ar" ? "أنت" : "You");
+      const sender = isAdminUser()
+        ? (state.lang === "ar" ? "👑 المشرف العام" : "👑 Official Admin")
+        : (state.user ? state.user.name : (state.lang === "ar" ? "أنت" : "You"));
       const replyObj = { sender, text: msg, createdAt: Date.now() };
       await persistStoryReply(storyId, replyObj);
 
@@ -1461,18 +2684,16 @@
       }
 
       input.value = "";
-      showToast(
-        state.lang === "ar" ? "تم إرسال ردك ومزامنته!" : "Reply sent and synced!",
-        "success"
-      );
+      showToast(state.lang === "ar" ? "تم إرسال ردك ومزامنته!" : "Reply sent and synced!", "success");
     }
 
     // -----------------------------------------------------------------------
-    // 8. BUYER REVIEWS MODAL
+    // 11. BUYER REVIEWS MODAL
     // -----------------------------------------------------------------------
     let selectedReviewRating = 5;
 
     function renderReviewsListHtml() {
+      const admin = isAdminUser();
       return state.reviews.map((rev) => `
         <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 space-y-2">
           <div class="flex items-center justify-between gap-2">
@@ -1487,18 +2708,42 @@
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              onclick="toggleReviewLike('${rev.id}')"
-              class="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center gap-1 hover:border-vicks-400 transition"
-            >
-              <i data-lucide="thumbs-up" class="w-3.5 h-3.5 text-vicks-500"></i>
-              <span>${Number(rev.likes) || 0}</span>
-            </button>
+            <div class="flex items-center gap-1.5">
+              <button
+                type="button"
+                onclick="toggleReviewLike('${rev.id}')"
+                class="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center gap-1 hover:border-vicks-400 transition"
+              >
+                <i data-lucide="thumbs-up" class="w-3.5 h-3.5 text-vicks-500"></i>
+                <span>${Number(rev.likes) || 0}</span>
+              </button>
+              ${admin ? `
+                <button
+                  type="button"
+                  onclick="adminDeleteReviewFromModal('${rev.id}')"
+                  class="p-1.5 rounded-xl bg-rose-600 text-white hover:bg-rose-700 transition"
+                  title="حذف التقييم"
+                >
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              ` : ""}
+            </div>
           </div>
           <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">${escapeHtml(rev.text)}</p>
         </div>
       `).join("");
+    }
+
+    async function adminDeleteReviewFromModal(revId) {
+      await persistReviewDelete(revId);
+      const listEl = document.getElementById("reviewsListContainer");
+      const countEl = document.getElementById("reviewsTotalCount");
+      if (listEl) {
+        listEl.innerHTML = renderReviewsListHtml();
+        lucide.createIcons();
+      }
+      if (countEl) countEl.textContent = String(state.reviews.length);
+      showToast(state.lang === "ar" ? "تم حذف التعليق بواسطة المشرف." : "Review removed by Admin.", "admin");
     }
 
     function openReviewsModal() {
@@ -1575,7 +2820,9 @@
         return;
       }
 
-      const author = state.user ? state.user.name : (state.lang === "ar" ? "زائر المنصة" : "Marketplace Guest");
+      const author = isAdminUser()
+        ? (state.lang === "ar" ? "👑 المشرف العام" : "👑 Official Admin")
+        : (state.user ? state.user.name : (state.lang === "ar" ? "زائر المنصة" : "Marketplace Guest"));
       const newRev = {
         id: "rev_" + Date.now(),
         author,
@@ -1597,7 +2844,7 @@
         lucide.createIcons();
       }
       if (countEl) countEl.textContent = String(state.reviews.length);
-      showToast(t.commentSuccess, "success");
+      addVicksPoints(10, "إضافة تقييم جديد", "Posted review");
     }
 
     async function toggleReviewLike(revId) {
@@ -1613,7 +2860,7 @@
     }
 
     // -----------------------------------------------------------------------
-    // 9. SMART VISUAL SEARCH MODAL
+    // 12. SMART VISUAL SEARCH & VICKS AI ASSISTANT
     // -----------------------------------------------------------------------
     function openVisualSearchModal() {
       const t = i18n[state.lang];
@@ -1691,9 +2938,6 @@
       reader.readAsDataURL(file);
     }
 
-    // -----------------------------------------------------------------------
-    // 10. VICKS AI ASSISTANT MODAL
-    // -----------------------------------------------------------------------
     let aiMessages = [];
 
     function openAiModal() {
@@ -1768,19 +3012,25 @@
     function generateVicksAiReply(promptText) {
       const q = promptText.toLowerCase();
       if (state.lang === "en") {
-        if (q.includes("story") || q.includes("stories")) {
-          return `There are currently ${state.stories.length} stories synced in VICKS MARKET. You can tap "+ Add Story" anytime to publish a new story for everyone.`;
+        if (q.includes("admin") || q.includes("email") || q.includes("supervisor")) {
+          return `The Official Admin email for VICKS MARKET is ${OFFICIAL_ADMIN_EMAIL}. Signing in with this email unlocks the Admin Command Center.`;
         }
-        return `Got it! Regarding "${promptText}", you can add stories, read or post reviews, and join the community group directly from VICKS MARKET.`;
+        if (q.includes("product") || q.includes("offer") || q.includes("sell")) {
+          return `You can publish any new product or offer using the "+ Post Offer" button. There are currently ${state.listings.length} live listings synced across all visitors!`;
+        }
+        return `Regarding "${promptText}": You currently have ${state.points} VICKS Points. You can post offers (+25 pts), add stories (+15 pts), or contact Official Admin at ${OFFICIAL_ADMIN_EMAIL}.`;
       }
 
-      if (q.includes("حالة") || q.includes("حالات") || q.includes("ستوري")) {
-        return `يوجد حالياً ${state.stories.length} حالة متزامنة في VICKS MARKET. تقدر تضيف حالة جديدة في أي وقت من زر "إضافة حالة" وتظهر للجميع فوراً.`;
+      if (q.includes("مشرف") || q.includes("ادمن") || q.includes("إدارة") || q.includes("اميل") || q.includes("ايميل")) {
+        return `إيميل المشرف العام الرسمي لمنصة VICKS MARKET هو: ${OFFICIAL_ADMIN_EMAIL}. عند تسجيل الدخول بهذا الإيميل تظهر "لوحة المشرف" الذهبية للتحكم الكامل في الإعلانات والمحتوى والشكاوى.`;
       }
-      if (q.includes("تقييم") || q.includes("رأي") || q.includes("مراجعات")) {
-        return `لدينا حالياً ${state.reviews.length} تقييمات من المشترين والمستخدمين. يمكنك فتح "آراء المشترين" لإضافة تقييمك أو الإعجاب بالتعليقات.`;
+      if (q.includes("منتج") || q.includes("عرض") || q.includes("بيع") || q.includes("نشر")) {
+        return `تقدر تنشر أي منتج أو عرض جديد من زر "انشر عرضاً" في الأعلى، وهيظهر فوراً لجميع الزوار مع سلة مشتريات ومفضلة (+25 نقطة فيكس).`;
       }
-      return `بخصوص "${promptText}": يمكنك إضافة ومشاهدة الحالات، كتابة التقييمات، أو الدردشة في المجموعات بشكل مباشر داخل VICKS MARKET.`;
+      if (q.includes("حالة") || q.includes("حالات")) {
+        return `يوجد حالياً ${state.stories.length} حالة نشطة. اضغط على "إضافة حالة" لمشاركة حالتك فوراً (+15 نقطة).`;
+      }
+      return `بخصوص "${promptText}": رصيدك الحالي هو ${state.points} نقطة فيكس. تقدر تنشر عروض، تضيف حالات، أو تتواصل مع الإدارة عبر ${OFFICIAL_ADMIN_EMAIL}.`;
     }
 
     function sendAiMessage(e) {
@@ -1802,10 +3052,11 @@
     }
 
     // -----------------------------------------------------------------------
-    // 11. COMMUNITY HUB MODAL (COMPLAINTS, SUGGESTIONS, GROUPS) & INFO PAGES
+    // 13. COMMUNITY HUB MODAL (COMPLAINTS, SUGGESTIONS, GROUPS) & INFO PAGES
     // -----------------------------------------------------------------------
     function renderGroupMessagesHtml() {
       const t = i18n[state.lang];
+      const admin = isAdminUser();
       if (state.groupMessages.length === 0) {
         return `
           <div class="h-full flex flex-col items-center justify-center text-center py-12 text-slate-400">
@@ -1815,10 +3066,19 @@
         `;
       }
       return state.groupMessages.map((m) => `
-        <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 space-y-1">
-          <div class="flex items-center justify-between text-[11px]">
-            <span class="font-extrabold text-vicks-600 dark:text-orange-400">${escapeHtml(m.sender)}</span>
-            <span class="text-slate-400">${escapeHtml(m.time)}</span>
+        <div class="p-3 rounded-2xl ${m.isAdmin ? "bg-amber-50/90 dark:bg-amber-950/35 border border-amber-300/70 dark:border-amber-800/60" : "bg-slate-100 dark:bg-slate-800"} space-y-1">
+          <div class="flex items-center justify-between text-[11px] gap-2">
+            <span class="font-extrabold ${m.isAdmin ? "text-amber-700 dark:text-amber-300" : "text-vicks-600 dark:text-orange-400"}">
+              ${m.isAdmin ? "👑 " : ""}${escapeHtml(m.sender)}
+            </span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-slate-400">${escapeHtml(m.time)}</span>
+              ${admin ? `
+                <button type="button" onclick="persistGroupMessageDelete('${m.id}')" class="text-rose-500 hover:text-rose-700" title="حذف">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              ` : ""}
+            </div>
           </div>
           <p class="text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(m.text)}</p>
         </div>
@@ -1968,12 +3228,16 @@
       const text = input.value.trim();
       if (!text) return;
 
-      const sender = state.user ? state.user.name : (state.lang === "ar" ? "عضو المجموعة" : "Group Member");
+      const admin = isAdminUser();
+      const sender = admin
+        ? (state.lang === "ar" ? "المشرف العام (vicksmarket@gmail.com)" : "Official Admin (vicksmarket@gmail.com)")
+        : (state.user ? state.user.name : (state.lang === "ar" ? "عضو المجموعة" : "Group Member"));
       const now = new Date();
       const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       const msgObj = {
         id: "gmsg_" + Date.now(),
         sender,
+        isAdmin: admin,
         text,
         time,
         createdAt: Date.now()
@@ -1988,10 +3252,7 @@
         chatBox.scrollTop = chatBox.scrollHeight;
         lucide.createIcons();
       }
-      showToast(
-        state.lang === "ar" ? "تم إرسال الرسالة ومزامنتها!" : "Message sent and synced!",
-        "success"
-      );
+      showToast(state.lang === "ar" ? "تم إرسال الرسالة ومزامنتها!" : "Message sent and synced!", "success");
     }
 
     async function submitComplaintForm(e) {
@@ -2007,12 +3268,16 @@
         type,
         details,
         sender,
+        status: "pending",
+        assignedAdmin: OFFICIAL_ADMIN_EMAIL,
         date: new Date().toISOString()
       };
       await persistComplaint(item);
       closeModal();
       showToast(
-        state.lang === "ar" ? "تم استلام شكواك ومزامنتها وسيتم مراجعتها." : "Your complaint has been submitted and synced.",
+        state.lang === "ar"
+          ? `تم إرسال شكواك إلى المشرف العام (${OFFICIAL_ADMIN_EMAIL})`
+          : `Complaint routed to Official Admin (${OFFICIAL_ADMIN_EMAIL})`,
         "success"
       );
     }
@@ -2028,14 +3293,12 @@
         name,
         type,
         text,
+        assignedAdmin: OFFICIAL_ADMIN_EMAIL,
         date: new Date().toISOString()
       };
       await persistSuggestion(item);
       closeModal();
-      showToast(
-        state.lang === "ar" ? "شكراً لاقتراحك! نقدر مشاركتك لتطوير المنصة." : "Thank you for your suggestion!",
-        "success"
-      );
+      addVicksPoints(10, "إرسال اقتراح تطويري", "Submitted suggestion");
     }
 
     function openInfoModal(topic) {
@@ -2043,20 +3306,20 @@
         vip: {
           titleAr: "خدمات VIP للمتاجر والمشترين",
           titleEn: "VIP Services for Stores & Shoppers",
-          bodyAr: "تمنح عضوية VIP المتاجر شارة التوثيق، أولوية الظهور، وتجربة متقدمة داخل VICKS MARKET.",
-          bodyEn: "VIP status gives stores verified badges, priority visibility, and an enhanced experience inside VICKS MARKET."
+          bodyAr: "تمنح عضوية VIP المتاجر شارة التوثيق، أولوية الظهور، ونقاط مكافآت مضاعفة داخل VICKS MARKET بإشراف vicksmarket@gmail.com.",
+          bodyEn: "VIP status gives stores verified badges, priority visibility, and bonus points inside VICKS MARKET managed by vicksmarket@gmail.com."
         },
         faq: {
           titleAr: "الأسئلة الشائعة",
           titleEn: "Frequently Asked Questions",
-          bodyAr: "يمكنك إضافة القصص والتفاعل معها، إضافة تقييم، المشاركة في المجموعات، أو التواصل مع مساعد VICKS AI في أي وقت.",
-          bodyEn: "You can add and view stories, post reviews, join community groups, or chat with VICKS AI anytime."
+          bodyAr: "يمكنك نشر العروض والمنتجات، إضافة الحالات، كسب نقاط فيكس، والمشاركة في التصويت والمجموعات تحت إشراف الإدارة الرسمية vicksmarket@gmail.com.",
+          bodyEn: "You can publish offers, add stories, earn VICKS points, and join live polls & groups under Official Admin vicksmarket@gmail.com."
         },
         terms: {
           titleAr: "الشروط والأحكام",
           titleEn: "Terms & Conditions",
-          bodyAr: "يلتزم جميع المستخدمين بالاحترام والشفافية، وتعمل منصة VICKS MARKET وفق معايير الاستخدام الآمن.",
-          bodyEn: "All users agree to respectful and transparent participation under VICKS MARKET safety guidelines."
+          bodyAr: "يلتزم جميع المستخدمين بالاحترام والشفافية، وتحتفظ الإدارة الرسمية (vicksmarket@gmail.com) بحق مراجعة أو حذف أي محتوى مخالف.",
+          bodyEn: "All users agree to respectful participation. Official Admin (vicksmarket@gmail.com) reserves the right to moderate policy violations."
         },
         verify: {
           titleAr: "تحقق الحساب",
@@ -2082,7 +3345,7 @@
     }
 
     // -----------------------------------------------------------------------
-    // 12. AUTHENTICATION: LOGIN, FORGOT PASSWORD (6-DIGIT CODE), SIGNUP
+    // 14. AUTHENTICATION: LOGIN (WITH OFFICIAL ADMIN RECOGNITION), RESET, SIGNUP
     // -----------------------------------------------------------------------
     function handleAccountClick() {
       if (state.user) {
@@ -2094,17 +3357,28 @@
 
     function openProfileModal() {
       const t = i18n[state.lang];
+      const admin = isAdminUser();
+      const tier = getVipTierInfo();
+
       openModal(`
         <div class="p-6 text-center space-y-4">
-          <div class="w-16 h-16 mx-auto rounded-2xl bg-orange-100 dark:bg-orange-950 text-vicks-600 dark:text-orange-400 flex items-center justify-center text-2xl font-extrabold">
-            ${escapeHtml(state.user.name.charAt(0).toUpperCase())}
+          <div class="w-16 h-16 mx-auto rounded-2xl ${admin ? "bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950" : "bg-orange-100 dark:bg-orange-950 text-vicks-600 dark:text-orange-400"} flex items-center justify-center text-2xl font-extrabold shadow-md">
+            ${admin ? "👑" : escapeHtml(state.user.name.charAt(0).toUpperCase())}
           </div>
           <div>
             <h3 class="text-lg font-extrabold">${escapeHtml(state.user.name)}</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">${escapeHtml(state.user.email)}</p>
-            ${state.user.storeName ? `<span class="inline-block mt-2 text-xs font-bold px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/60 text-vicks-600 dark:text-orange-400">${escapeHtml(state.user.storeName)}</span>` : ""}
+            <span class="inline-block mt-2 text-xs font-extrabold px-3 py-1 rounded-full ${tier.badgeClass}">
+              ${state.lang === "ar" ? tier.ar : tier.en}
+            </span>
           </div>
-          <div class="flex gap-2 pt-2">
+          ${admin ? `
+            <button type="button" onclick="openAdminDashboardModal()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-sm">
+              <i data-lucide="crown" class="w-4 h-4"></i>
+              <span>${state.lang === "ar" ? "فتح لوحة تحكم المشرف العام" : "Open Admin Command Center"}</span>
+            </button>
+          ` : ""}
+          <div class="flex gap-2 pt-1">
             <button type="button" onclick="closeModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-extrabold">${state.lang === "ar" ? "إغلاق" : "Close"}</button>
             <button type="button" onclick="logoutUser()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold">${t.logoutBtn}</button>
           </div>
@@ -2114,9 +3388,19 @@
 
     function logoutUser() {
       state.user = null;
+      saveLocalFallback();
       applyLocalization();
+      renderListings();
       closeModal();
       showToast(state.lang === "ar" ? "تم تسجيل الخروج." : "Logged out.", "info");
+    }
+
+    function fillAdminEmailShortcut() {
+      const emailInput = document.getElementById("loginEmail");
+      if (emailInput) {
+        emailInput.value = OFFICIAL_ADMIN_EMAIL;
+        emailInput.focus();
+      }
     }
 
     function openLoginModal() {
@@ -2139,8 +3423,14 @@
 
           <form onsubmit="handleLoginSubmit(event)" class="space-y-3.5">
             <div>
-              <label class="block text-xs font-bold mb-1">${t.emailLabel}</label>
-              <input id="loginEmail" type="email" required placeholder="name@example.com" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-bold">${t.emailLabel}</label>
+                <button type="button" onclick="fillAdminEmailShortcut()" class="text-[11px] font-extrabold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1">
+                  <i data-lucide="crown" class="w-3 h-3"></i>
+                  <span>${state.lang === "ar" ? "دخول المشرف" : "Admin Email"}</span>
+                </button>
+              </div>
+              <input id="loginEmail" type="email" required placeholder="vicksmarket@gmail.com" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
             </div>
             <div>
               <label class="block text-xs font-bold mb-1">${t.passwordLabel}</label>
@@ -2171,18 +3461,37 @@
     function handleLoginSubmit(e) {
       e.preventDefault();
       const email = document.getElementById("loginEmail").value.trim();
-      const derivedName = email.split("@")[0] || "User";
+      const admin = email.toLowerCase() === OFFICIAL_ADMIN_EMAIL;
+      const derivedName = admin
+        ? (state.lang === "ar" ? "المشرف العام" : "Official Admin")
+        : (email.split("@")[0] || "User");
+
       state.user = {
         name: derivedName,
         email,
-        storeName: state.lang === "ar" ? "حساب موثق" : "Verified Account"
+        isAdmin: admin,
+        storeName: admin
+          ? (state.lang === "ar" ? "👑 إدارة VICKS MARKET" : "👑 VICKS MARKET Admin")
+          : (state.lang === "ar" ? "حساب موثق" : "Verified Account")
       };
+      saveLocalFallback();
       applyLocalization();
+      renderListings();
       closeModal();
-      showToast(
-        state.lang === "ar" ? `أهلاً بك يا ${derivedName}!` : `Welcome back, ${derivedName}!`,
-        "success"
-      );
+
+      if (admin) {
+        showToast(
+          state.lang === "ar"
+            ? `👑 مرحباً بالمشرف العام (${OFFICIAL_ADMIN_EMAIL})! تم تفعيل صلاحيات الإدارة الكاملة.`
+            : `👑 Welcome Official Admin (${OFFICIAL_ADMIN_EMAIL})! Full Admin powers unlocked.`,
+          "admin"
+        );
+      } else {
+        showToast(
+          state.lang === "ar" ? `أهلاً بك يا ${derivedName}!` : `Welcome back, ${derivedName}!`,
+          "success"
+        );
+      }
     }
 
     function openForgotPasswordStep1() {
@@ -2363,16 +3672,22 @@
         return;
       }
 
+      const admin = email.toLowerCase() === OFFICIAL_ADMIN_EMAIL;
       state.user = {
-        name: storeName,
+        name: admin ? (state.lang === "ar" ? "المشرف العام" : "Official Admin") : storeName,
         email,
-        storeName
+        isAdmin: admin,
+        storeName: admin ? "👑 VICKS MARKET Admin" : storeName
       };
+      saveLocalFallback();
       applyLocalization();
+      renderListings();
       closeModal();
       showToast(
-        state.lang === "ar" ? `تم إنشاء حساب متجر "${storeName}" بنجاح!` : `Store "${storeName}" created successfully!`,
-        "success"
+        admin
+          ? (state.lang === "ar" ? `👑 تم تفعيل حساب المشرف العام (${OFFICIAL_ADMIN_EMAIL})!` : `👑 Official Admin (${OFFICIAL_ADMIN_EMAIL}) activated!`)
+          : (state.lang === "ar" ? `تم إنشاء حساب متجر "${storeName}" بنجاح!` : `Store "${storeName}" created successfully!`),
+        admin ? "admin" : "success"
       );
     }
 
@@ -2397,11 +3712,13 @@
       setReviewRating,
       submitReviewForm,
       toggleReviewLike,
+      adminDeleteReviewFromModal,
       handleVisualFileSelected,
       sendAiMessage,
       openHubModal,
       switchHubTab,
       sendGroupMessage,
+      persistGroupMessageDelete,
       submitComplaintForm,
       submitSuggestionForm,
       openInfoModal,
@@ -2409,22 +3726,50 @@
       handleBackdropClick,
       logoutUser,
       openLoginModal,
+      fillAdminEmailShortcut,
       handleLoginSubmit,
       openForgotPasswordStep1,
       handleSendResetCode,
       handleVerify6DigitCode,
       openSignupModal,
-      handleSignupSubmit
+      handleSignupSubmit,
+      dismissAnnouncementLocally,
+      copyAdminEmail,
+      openAdminDashboardModal,
+      switchAdminTab,
+      handleAdminSaveAnnouncement,
+      handleAdminClearAnnouncement,
+      handleAdminUpdatePoll,
+      adminDeleteStory,
+      adminDeleteReview,
+      adminResolveComplaint,
+      adminDeleteComplaint,
+      adminDeleteSuggestion,
+      openPublishListingModal,
+      handlePublishListingSubmit,
+      persistListingDelete,
+      openListingDetailModal,
+      toggleFavoriteItem,
+      toggleFavoritesFilter,
+      handleSortChange,
+      addToCart,
+      openCartModal,
+      changeCartQty,
+      completeCartOrder,
+      voteOnPoll,
+      openPointsModal
     });
 
     // -----------------------------------------------------------------------
-    // 13. INITIALIZATION
+    // 15. INITIALIZATION
     // -----------------------------------------------------------------------
     function renderAll() {
       applyLocalization();
+      renderAnnouncementBanner();
       renderCategoryTabs();
       renderStories();
-      updateEmptyAreaState();
+      renderListings();
+      renderPollWidget();
       lucide.createIcons();
     }
 
