@@ -1,0 +1,2438 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VICKS MARKET - سوقك المتكامل</title>
+  <!-- Load Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Inter & Cairo Fonts for clean Arabic/Latin typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            vicks: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom scrollbar and subtle UI refinements */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.45);
+      border-radius: 9999px;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.96) translateY(6px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .animate-pop {
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 min-h-screen flex flex-col">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-[92%] max-w-md pointer-events-none"></div>
+
+  <!-- TOP STICKY HEADER -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200/80 dark:border-slate-800 shadow-sm">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5">
+      <!-- Top Row: Brand Logo + Quick Utility Actions -->
+      <div class="flex items-center justify-between gap-2">
+        <!-- Brand Logo & Bag Icon -->
+        <button onclick="resetHome()" class="flex items-center gap-2.5 text-start group focus:outline-none">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 via-vicks-500 to-amber-600 flex items-center justify-center text-white shadow-md shadow-orange-500/25 group-hover:scale-105 transition-transform">
+            <i data-lucide="shopping-bag" class="w-5 h-5 stroke-[2.4]"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">VICKS MARKET</span>
+              <span id="userBadge" class="hidden text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"></span>
+            </div>
+            <p id="brandSubtitle" class="text-[11px] sm:text-xs font-medium text-vicks-600 dark:text-orange-400">سوقك المتكامل</p>
+          </div>
+        </button>
+
+        <!-- Action Controls: Language, Theme, AI Assistant, Account/Login -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <!-- Language Switcher -->
+          <button id="langToggleBtn" onclick="toggleLanguage()" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition active:scale-95" title="Switch Language">
+            <i data-lucide="languages" class="w-4 h-4 text-vicks-500"></i>
+            <span id="langLabel">English</span>
+          </button>
+
+          <!-- Dark Mode Switcher -->
+          <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-300 transition active:scale-95" title="Toggle Dark Mode">
+            <i id="themeIcon" data-lucide="moon" class="w-4 h-4"></i>
+          </button>
+
+          <!-- VICKS AI Assistant Button -->
+          <button onclick="openAiModal()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-orange-500/20 transition active:scale-95">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span class="hidden sm:inline" data-i18n="aiBtn">VICKS AI</span>
+          </button>
+
+          <!-- Account / Login Button -->
+          <button id="accountBtn" onclick="handleAccountClick()" class="px-2.5 sm:px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 transition active:scale-95">
+            <i data-lucide="user-circle-2" class="w-4 h-4 text-vicks-500"></i>
+            <span id="accountLabel">دخول</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Row: Search Input + Visual Search + Clear -->
+      <div class="mt-2.5 flex items-center gap-2">
+        <div class="relative flex-1">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 start-3.5 pointer-events-none"></i>
+          <input
+            id="searchInput"
+            type="text"
+            oninput="handleSearchInput(this.value)"
+            placeholder="ابحث في القصص أو المتاجر..."
+            class="w-full ps-10 pe-9 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-transparent focus:border-vicks-500 focus:bg-white dark:focus:bg-slate-900 text-sm outline-none transition"
+          />
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute top-1/2 -translate-y-1/2 end-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Visual Search Trigger -->
+        <button onclick="openVisualSearchModal()" class="p-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/50 dark:hover:bg-orange-900/60 border border-orange-200 dark:border-orange-800/60 text-vicks-600 dark:text-orange-400 flex items-center gap-1.5 transition active:scale-95 shrink-0" title="البحث البصري الذكي">
+          <i data-lucide="scan-search" class="w-5 h-5"></i>
+          <span class="hidden md:inline text-xs font-bold" data-i18n="visualSearchShort">بحث بالصورة</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- CATEGORY TABS BAR -->
+    <nav class="border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900">
+      <div id="categoryTabs" class="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <!-- Rendered via JS -->
+      </div>
+    </nav>
+  </header>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 pt-4 pb-28 space-y-6">
+
+    <!-- Active Filter Banner if filtered -->
+    <div id="activeFilterBar" class="hidden items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/60">
+      <div class="flex items-center gap-2 text-sm font-bold text-vicks-700 dark:text-orange-300">
+        <i data-lucide="filter" class="w-4 h-4"></i>
+        <span id="activeFilterText"></span>
+      </div>
+      <button onclick="resetHome()" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition">
+        <span data-i18n="resetFilters">عرض الكل</span>
+      </button>
+    </div>
+
+    <!-- SELLER STORIES BAR -->
+    <section aria-label="Seller Stories" class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 sm:p-4 border border-slate-200/70 dark:border-slate-800 shadow-sm">
+      <div class="flex items-center justify-between gap-2 mb-3">
+        <h2 class="text-sm font-extrabold flex items-center gap-2 text-slate-800 dark:text-slate-100">
+          <span class="w-2 h-2 rounded-full bg-vicks-500 animate-pulse"></span>
+          <span data-i18n="storiesTitle">قصص المتاجر والخبراء</span>
+        </h2>
+        <div class="flex items-center gap-2">
+          <span class="hidden sm:inline text-xs text-slate-400" data-i18n="storiesHint">اضغط للمشاهدة والرد</span>
+          <button
+            type="button"
+            onclick="openAddStoryModal()"
+            class="px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/50 dark:hover:bg-orange-900/60 border border-orange-200 dark:border-orange-800/60 text-vicks-600 dark:text-orange-400 text-xs font-extrabold flex items-center gap-1.5 transition active:scale-95"
+          >
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+            <span data-i18n="addStoryBtn">إضافة حالة</span>
+          </button>
+        </div>
+      </div>
+      <div id="storiesContainer" class="flex items-start gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-1">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- EMPTY / READY PLACEHOLDER WHERE PRODUCTS & LOCATIONS USED TO BE -->
+    <section id="emptyCatalogArea" class="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-4 shadow-2xs">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-vicks-500 flex items-center justify-center">
+        <i data-lucide="inbox" class="w-8 h-8"></i>
+      </div>
+      <div class="space-y-1.5 max-w-md mx-auto">
+        <h3 id="emptyAreaTitle" class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white" data-i18n="noProductsTitle">لا توجد منتجات أو مواقع مضافة حالياً</h3>
+        <p id="emptyAreaDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed" data-i18n="noProductsDesc">تم إزالة المنتجات وأقسام المواقع. يمكنك استعراض القصص، استخدام مساعد VICKS AI، أو فتح التقييمات والمجتمع.</p>
+      </div>
+      <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
+        <button onclick="openReviewsModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+          <i data-lucide="message-square" class="w-4 h-4 text-vicks-500"></i>
+          <span data-i18n="reviewsTitle">آراء المشترين</span>
+        </button>
+        <button onclick="openAiModal()" class="px-4 py-2.5 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm shadow-orange-500/20 transition">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span data-i18n="aiBtn">VICKS AI</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- SUPPORT & COMMUNITY HUB SECTION -->
+    <section id="communityHub" class="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div>
+          <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-orange-100 text-vicks-700 dark:bg-orange-950 dark:text-orange-300 mb-1.5">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+            <span data-i18n="hubBadge">مركز الدعم والمجتمع</span>
+          </span>
+          <h2 class="text-lg sm:text-xl font-extrabold" data-i18n="hubTitle">خدمة العملاء، المجموعات، والمقترحات</h2>
+        </div>
+        <button onclick="openAiModal()" class="self-start sm:self-auto px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-vicks-500 dark:hover:bg-vicks-600 text-white text-xs font-bold flex items-center gap-2 transition">
+          <i data-lucide="message-square-heart" class="w-4 h-4"></i>
+          <span data-i18n="talkToStore">تحدث مع صاحب المتجر / المساعد</span>
+        </button>
+      </div>
+
+      <!-- 3 Hub Cards: Complaints, Suggestions, Groups -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        <!-- Complaints Card -->
+        <button onclick="openHubModal('complaints')" class="p-4 rounded-2xl bg-rose-50/70 hover:bg-rose-50 dark:bg-rose-950/25 dark:hover:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 text-start transition group">
+          <div class="w-11 h-11 rounded-xl bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-extrabold text-base text-slate-900 dark:text-white" data-i18n="complaintsTitle">الشكاوى</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1" data-i18n="complaintsDesc">ساعدنا في الحفاظ على بيئة آمنة وبلّغ عن أي مخالفة.</p>
+        </button>
+
+        <!-- Suggestions Card -->
+        <button onclick="openHubModal('suggestions')" class="p-4 rounded-2xl bg-amber-50/80 hover:bg-amber-50 dark:bg-amber-950/25 dark:hover:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 text-start transition group">
+          <div class="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <i data-lucide="lightbulb" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-extrabold text-base text-slate-900 dark:text-white" data-i18n="suggestionsTitle">الاقتراحات</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1" data-i18n="suggestionsDesc">رأيك يساعدنا على التحسين وإضافة مزايا جديدة.</p>
+        </button>
+
+        <!-- Groups Card -->
+        <button onclick="openHubModal('groups')" class="p-4 rounded-2xl bg-orange-50/80 hover:bg-orange-50 dark:bg-orange-950/25 dark:hover:bg-orange-950/40 border border-orange-200/80 dark:border-orange-900/50 text-start transition group">
+          <div class="w-11 h-11 rounded-xl bg-orange-100 dark:bg-orange-900/60 text-vicks-600 dark:text-orange-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <i data-lucide="users" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-extrabold text-base text-slate-900 dark:text-white" data-i18n="groupsTitle">المجموعات</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1" data-i18n="groupsDesc">تحدث مع الجميع بحرية في مجموعات VICKS MARKET الرسمية.</p>
+        </button>
+      </div>
+
+      <!-- Footer Links Grid: Store, Legal, Contact -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800 text-sm">
+        <div>
+          <h4 class="font-extrabold text-xs uppercase tracking-wider text-vicks-600 dark:text-orange-400 mb-2.5" data-i18n="storeLinksHeading">المتجر</h4>
+          <ul class="space-y-2 text-slate-600 dark:text-slate-300">
+            <li><button onclick="selectCategory('offers')" class="hover:text-vicks-600 dark:hover:text-orange-400 transition" data-i18n="linkDailyOffers">العروض اليومية</button></li>
+            <li><button onclick="openInfoModal('vip')" class="hover:text-vicks-600 dark:hover:text-orange-400 transition" data-i18n="linkVip">خدمات VIP</button></li>
+            <li><button onclick="openInfoModal('faq')" class="hover:text-vicks-600 dark:hover:text-orange-400 transition" data-i18n="linkFaq">الأسئلة الشائعة</button></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-extrabold text-xs uppercase tracking-wider text-vicks-600 dark:text-orange-400 mb-2.5" data-i18n="legalHeading">قانوني</h4>
+          <ul class="space-y-2 text-slate-600 dark:text-slate-300">
+            <li><button onclick="openInfoModal('terms')" class="hover:text-vicks-600 dark:hover:text-orange-400 transition" data-i18n="linkTerms">الشروط والأحكام</button></li>
+            <li><button onclick="openInfoModal('verify')" class="hover:text-vicks-600 dark:hover:text-orange-400 transition" data-i18n="linkVerify">تحقق الحساب</button></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-extrabold text-xs uppercase tracking-wider text-vicks-600 dark:text-orange-400 mb-2.5" data-i18n="contactHeading">تواصل</h4>
+          <button onclick="openAiModal()" class="w-full py-2.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
+            <i data-lucide="message-circle" class="w-4 h-4 text-vicks-400"></i>
+            <span data-i18n="talkToStore">تحدث مع صاحب المتجر</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Legal Disclaimer Box -->
+      <div class="p-4 rounded-2xl bg-slate-100/90 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+        <div class="flex items-start gap-2.5">
+          <i data-lucide="info" class="w-4 h-4 text-vicks-600 dark:text-orange-400 shrink-0 mt-0.5"></i>
+          <div class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+            <span class="font-extrabold text-slate-800 dark:text-white" data-i18n="disclaimerTitle">إخلاء مسؤولية قانوني: </span>
+            <span data-i18n="disclaimerBody">Vicks Market هي منصة للوساطة والربط بين البائع والمشتري فقط، إدارة الموقع غير مسؤولة عن جودة أو قانونية المنتجات المعروضة من قِبل المستخدمين.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center text-[11px] font-medium text-slate-400 pt-1">
+        VICKS MARKET • ALL RIGHTS RESERVED BY MOM 2026 ©
+      </div>
+    </section>
+  </main>
+
+  <!-- FLOATING AI BUTTON -->
+  <button onclick="openAiModal()" aria-label="VICKS AI" class="fixed bottom-5 end-5 z-30 w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 via-vicks-500 to-amber-600 text-white shadow-xl shadow-orange-500/35 flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+    <i data-lucide="sparkles" class="w-6 h-6"></i>
+  </button>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL BACKDROP & CONTAINER                                             -->
+  <!-- ===================================================================== -->
+  <div id="modalBackdrop" onclick="handleBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-xs items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div id="modalCard" class="animate-pop relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <!-- Dynamic Modal Content Injected Here -->
+      <div id="modalContent" class="overflow-y-auto flex-1"></div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- APPLICATION STATE & LOGIC                                             -->
+  <!-- ===================================================================== -->
+  <script type="module">
+    // Modular Firebase v11 SDK imports for real-time cross-user synchronization
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      onValue,
+      push,
+      remove,
+      update
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      deleteDoc,
+      updateDoc,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCraxuu0hYyvXLDPddfhkWRwEBjnZQL5Ec",
+      authDomain: "vicks-market.firebaseapp.com",
+      projectId: "vicks-market",
+      storageBucket: "vicks-market.firebasestorage.app",
+      messagingSenderId: "319481546504",
+      appId: "1:319481546504:web:bab3fd8160eeb736decebd",
+      measurementId: "G-G71S8M7NBB"
+    };
+
+    let app = null;
+    let analytics = null;
+    let rtdb = null;
+    let db = null;
+    let firebaseReady = false;
+
+    try {
+      app = initializeApp(firebaseConfig);
+      rtdb = getDatabase(app);
+      db = getFirestore(app);
+      firebaseReady = true;
+      if (typeof window !== "undefined" && window.location.protocol !== "file:") {
+        try {
+          analytics = getAnalytics(app);
+        } catch (_analyticsErr) {
+          // Analytics optional in restricted environments
+        }
+      }
+    } catch (initErr) {
+      console.warn("Firebase initialization fallback active:", initErr);
+      firebaseReady = false;
+    }
+
+    // -----------------------------------------------------------------------
+    // 1. STATE MANAGEMENT & LOCAL FALLBACK PERSISTENCE
+    // -----------------------------------------------------------------------
+    const LOCAL_FALLBACK_KEY = "vicks_market_realtime_fallback_v1";
+
+    const defaultReviews = [
+      { id: "r1", author: "مريم عبد الله", rating: 5, text: "تجربة استخدام المنصة سهلة وسريعة جداً شكراً فيكس ماركت!", likes: 12 },
+      { id: "r2", author: "أحمد سامي", rating: 4, text: "واجهة نظيفة ومريحة للعين في الوضع الليلي والنهاري.", likes: 6 },
+      { id: "r3", author: "نور حسن", rating: 5, text: "التنقل بين الأقسام والقصص سلس جداً.", likes: 8 }
+    ];
+
+    const state = {
+      lang: "ar", // 'ar' | 'en'
+      dark: false,
+      category: "all", // 'all' | 'offers' | 'electronics' | 'clothing'
+      searchQuery: "",
+      user: null, // null or { name, email, storeName }
+      stories: [],
+      reviews: [...defaultReviews],
+      groupMessages: [],
+      complaintsSubmitted: [],
+      suggestionsSubmitted: [],
+      syncStatus: "connecting" // 'live' | 'fallback'
+    };
+
+    function saveLocalFallback() {
+      try {
+        const snapshot = {
+          stories: state.stories,
+          reviews: state.reviews,
+          groupMessages: state.groupMessages,
+          complaintsSubmitted: state.complaintsSubmitted,
+          suggestionsSubmitted: state.suggestionsSubmitted
+        };
+        localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify(snapshot));
+      } catch (_e) {
+        // Ignore storage quota or sandbox restrictions
+      }
+    }
+
+    function loadLocalFallback() {
+      try {
+        const raw = localStorage.getItem(LOCAL_FALLBACK_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.stories)) state.stories = parsed.stories;
+        if (Array.isArray(parsed.reviews) && parsed.reviews.length > 0) state.reviews = parsed.reviews;
+        if (Array.isArray(parsed.groupMessages)) state.groupMessages = parsed.groupMessages;
+        if (Array.isArray(parsed.complaintsSubmitted)) state.complaintsSubmitted = parsed.complaintsSubmitted;
+        if (Array.isArray(parsed.suggestionsSubmitted)) state.suggestionsSubmitted = parsed.suggestionsSubmitted;
+      } catch (_e) {
+        // Ignore malformed local cache
+      }
+    }
+
+    function markFallbackMode(reason) {
+      if (state.syncStatus !== "fallback") {
+        console.warn("Switched to local fallback sync:", reason);
+      }
+      state.syncStatus = "fallback";
+      saveLocalFallback();
+    }
+
+    // -----------------------------------------------------------------------
+    // 2. TRANSLATIONS & LOCALIZED LABELS
+    // -----------------------------------------------------------------------
+    const i18n = {
+      ar: {
+        brandSubtitle: 'سوقك المتكامل',
+        langToggle: 'English',
+        aiBtn: 'VICKS AI',
+        loginBtn: 'دخول',
+        searchPlaceholder: 'ابحث في القصص أو المتاجر...',
+        visualSearchShort: 'بحث بالصورة',
+        resetFilters: 'عرض الكل',
+        storiesTitle: 'الحالات',
+        storiesHint: 'أضف حالتك أو اضغط للمشاهدة',
+        addStoryBtn: 'إضافة حالة',
+        addStoryCardLabel: 'أضف حالة',
+        addStoryModalTitle: 'إضافة حالة جديدة',
+        addStoryModalSub: 'شارك حالتك الآن لتظهر فوراً في شريط الحالات',
+        storyAuthorLabel: 'الاسم أو المتجر',
+        storyCaptionLabel: 'نص الحالة أو العنوان *',
+        storyCaptionPlaceholder: 'اكتب حالتك هنا...',
+        storyEmojiLabel: 'رمز / إيموجي الحالة',
+        storyBgLabel: 'لون الخلفية',
+        storyImageLabel: 'رابط صورة (اختياري)',
+        publishStoryBtn: 'نشر الحالة',
+        noStoriesYet: 'لا توجد حالات مضافة بعد — اضغط على "إضافة حالة" لبدء حالتك الأولى.',
+        noProductsTitle: 'لا توجد منتجات أو مواقع مضافة حالياً',
+        noProductsDesc: 'تم إزالة المنتجات وأقسام المواقع. يمكنك إضافة ومشاهدة الحالات، استخدام مساعد VICKS AI، أو فتح التقييمات والمجتمع.',
+        hubBadge: 'مركز الدعم والمجتمع',
+        hubTitle: 'خدمة العملاء، المجموعات، والمقترحات',
+        talkToStore: 'تحدث مع صاحب المتجر',
+        complaintsTitle: 'الشكاوى',
+        complaintsDesc: 'ساعدنا في الحفاظ على بيئة آمنة وبلّغ عن أي مخالفة.',
+        suggestionsTitle: 'الاقتراحات',
+        suggestionsDesc: 'رأيك يساعدنا على التحسين وإضافة مزايا جديدة.',
+        groupsTitle: 'المجموعات',
+        groupsDesc: 'تحدث مع الجميع بحرية في مجموعات VICKS MARKET الرسمية.',
+        storeLinksHeading: 'المتجر',
+        linkDailyOffers: 'العروض اليومية',
+        linkVip: 'خدمات VIP',
+        linkFaq: 'الأسئلة الشائعة',
+        legalHeading: 'قانوني',
+        linkTerms: 'الشروط والأحكام',
+        linkVerify: 'تحقق الحساب',
+        contactHeading: 'تواصل',
+        disclaimerTitle: 'إخلاء مسؤولية قانوني: ',
+        disclaimerBody: 'Vicks Market هي منصة للوساطة والربط بين البائع والمشتري فقط، إدارة الموقع غير مسؤولة عن المحتوى أو المعاملات بين المستخدمين.',
+        reviewsTitle: 'آراء المشترين',
+        yourRating: 'تقييمك العام',
+        reviewPlaceholder: 'شاركنا رأيك بصدق...',
+        publishComment: 'نشر التعليق',
+        commentSuccess: 'تم نشر تعليقك بنجاح! 🎉',
+        loginRequiredComment: 'اكتب تعليقك أولاً قبل النشر.',
+        visualSearchTitle: 'البحث البصري الذكي',
+        visualSearchSubtitle: 'اختر صورة من جهازك أو التقط صورة للمعاينة والبحث.',
+        uploadFromDevice: 'ارفع صورة من الجهاز',
+        openCamera: 'افتح الكاميرا وصور',
+        visualSearchFormats: 'يدعم PNG, JPG بجودة عالية',
+        aiWelcome: 'أهلاً بك في VICKS AI. أنا مساعدك الشخصي داخل VICKS MARKET، أقدر أساعدك في الحالات، التقييمات، أو أي استفسار. تأمرني بإيه يا ملك؟',
+        aiInputPlaceholder: 'اسأل VICKS AI عن أي شيء...',
+        loginHeading: 'أهلاً بك',
+        loginSub: 'سجّل دخولك للمتابعة في VICKS MARKET',
+        emailLabel: 'البريد الإلكتروني',
+        passwordLabel: 'كلمة المرور',
+        forgotPassword: 'نسيت كلمة المرور؟',
+        loginSubmit: 'تسجيل الدخول',
+        noAccount: 'ليس لديك حساب؟',
+        createAccount: 'إنشاء حساب',
+        logoutBtn: 'تسجيل الخروج',
+        resetStep1Title: 'استعادة كلمة المرور',
+        resetStep1Desc: 'أدخل بريدك الإلكتروني لإرسال كود التحقق',
+        sendCodeBtn: 'إرسال الكود',
+        resetStep2Title: 'أدخل كود التحقق',
+        resetStep2Desc: 'أدخل الكود المكون من 6 أرقام المرسل إلى بريدك',
+        verifyCodeBtn: 'تحقق من الكود',
+        signupHeading: 'إنشاء حساب',
+        signupSub: 'انضم إلى Vicks Market',
+        storeNameLabel: 'اسم المتجر',
+        confirmPasswordLabel: 'تأكيد كلمة المرور',
+        notARobot: 'لست روبوت',
+        signupSubmit: 'إنشاء الحساب',
+        haveAccount: 'لديك حساب بالفعل؟',
+        complaintFormTitle: 'تقديم شكوى',
+        complaintFormSub: 'ساعدنا في الحفاظ على بيئة آمنة',
+        complaintTargetLabel: 'ID أو اسم المستخدم المشتكى عليه *',
+        complaintTypeLabel: 'نوع الشكوى *',
+        complaintDetailsLabel: 'تفاصيل الشكوى *',
+        complaintSenderLabel: 'اسمك أو ID حسابك (اختياري)',
+        complaintSubmitBtn: 'إرسال الشكوى',
+        suggestionFormTitle: 'الاقتراحات',
+        suggestionFormSub: 'رأيك يساعدنا على التحسين',
+        suggestionNameLabel: 'اسمك (اختياري)',
+        suggestionTypeLabel: 'نوع الاقتراح *',
+        suggestionTextLabel: 'اقتراحك *',
+        suggestionSubmitBtn: 'إرسال الاقتراح',
+        groupRoomTitle: 'مجموعة Vicks Market',
+        groupRoomSub: 'مفتوح للجميع • المجموعة الرسمية',
+        groupEmpty: 'لا توجد رسائل بعد — كُن أول من يكتب!',
+        groupPlaceholder: 'اكتب رسالة...',
+        storyReplyPlaceholder: 'اكتب رداً...',
+        complaintTypes: ['نصب واحتيال', 'منتج مخالف', 'إساءة أو سب', 'أخرى'],
+        suggestionTypes: ['تحسين موجود', 'ميزة جديدة', 'تصميم وألوان', 'أخرى']
+      },
+      en: {
+        brandSubtitle: 'Your favorite market',
+        langToggle: 'العربية',
+        aiBtn: 'VICKS AI',
+        loginBtn: 'Log in',
+        searchPlaceholder: 'Search stories...',
+        visualSearchShort: 'Visual Search',
+        resetFilters: 'Show All',
+        storiesTitle: 'Stories',
+        storiesHint: 'Add a story or tap to view',
+        addStoryBtn: 'Add Story',
+        addStoryCardLabel: 'Add Story',
+        addStoryModalTitle: 'Add a New Story',
+        addStoryModalSub: 'Publish your story so it appears right away in the stories bar',
+        storyAuthorLabel: 'Name or Store',
+        storyCaptionLabel: 'Story Caption / Title *',
+        storyCaptionPlaceholder: 'Write your story text...',
+        storyEmojiLabel: 'Story Emoji / Badge',
+        storyBgLabel: 'Background Style',
+        storyImageLabel: 'Image URL (Optional)',
+        publishStoryBtn: 'Publish Story',
+        noStoriesYet: 'No stories yet — tap "Add Story" to post your first story.',
+        noProductsTitle: 'No products or locations currently listed',
+        noProductsDesc: 'Products and location sections have been removed. You can add and view stories, chat with VICKS AI, or open reviews and community.',
+        hubBadge: 'Support & Community Hub',
+        hubTitle: 'Customer Care, Groups & Suggestions',
+        talkToStore: 'Chat with Store Owner',
+        complaintsTitle: 'Complaints',
+        complaintsDesc: 'Help us keep the marketplace safe and report policy violations.',
+        suggestionsTitle: 'Suggestions',
+        suggestionsDesc: 'Your feedback helps us improve and build better features.',
+        groupsTitle: 'Groups',
+        groupsDesc: 'Chat openly in official VICKS MARKET community groups.',
+        storeLinksHeading: 'Marketplace',
+        linkDailyOffers: "Today's Offers",
+        linkVip: 'VIP Services',
+        linkFaq: 'FAQ',
+        legalHeading: 'Legal',
+        linkTerms: 'Terms & Conditions',
+        linkVerify: 'Account Verification',
+        contactHeading: 'Contact',
+        disclaimerTitle: 'Legal Disclaimer: ',
+        disclaimerBody: 'Vicks Market is a mediation and connection platform between buyers and sellers only. Management is not responsible for user content or interactions.',
+        reviewsTitle: 'Buyer Reviews',
+        yourRating: 'Your rating',
+        reviewPlaceholder: 'Share your honest opinion...',
+        publishComment: 'Post Review',
+        commentSuccess: 'Your review has been published! 🎉',
+        loginRequiredComment: 'Please write a review before posting.',
+        visualSearchTitle: 'Smart Visual Search',
+        visualSearchSubtitle: 'Choose a photo from your device or snap one to preview.',
+        uploadFromDevice: 'Upload Photo from Device',
+        openCamera: 'Open Camera & Snap',
+        visualSearchFormats: 'Supports high-res PNG, JPG',
+        aiWelcome: 'Welcome to VICKS AI! I am your personal assistant inside VICKS MARKET. Ask me anything about stories, reviews, or platform features.',
+        aiInputPlaceholder: 'Ask VICKS AI anything...',
+        loginHeading: 'Hey, you',
+        loginSub: 'Log in to continue to VICKS MARKET',
+        emailLabel: 'E-mail',
+        passwordLabel: 'Password',
+        forgotPassword: 'Forgot your password?',
+        loginSubmit: 'Log in',
+        noAccount: "Don't have an account?",
+        createAccount: 'Create an account',
+        logoutBtn: 'Log out',
+        resetStep1Title: 'Reset Password',
+        resetStep1Desc: 'Enter your email address to receive a verification code',
+        sendCodeBtn: 'Send Code',
+        resetStep2Title: 'Enter Verification Code',
+        resetStep2Desc: 'Enter the 6-digit code sent to your email',
+        verifyCodeBtn: 'Verify Code',
+        signupHeading: 'Create Account',
+        signupSub: 'Join Vicks Market',
+        storeNameLabel: 'Store Name',
+        confirmPasswordLabel: 'Confirm Password',
+        notARobot: "I'm not a robot",
+        signupSubmit: 'Create Account',
+        haveAccount: 'Already have an account?',
+        complaintFormTitle: 'Submit a Complaint',
+        complaintFormSub: 'Help us maintain a safe marketplace',
+        complaintTargetLabel: 'Reported User ID or Store Name *',
+        complaintTypeLabel: 'Complaint Category *',
+        complaintDetailsLabel: 'Complaint Details *',
+        complaintSenderLabel: 'Your Name or Account ID (Optional)',
+        complaintSubmitBtn: 'Submit Complaint',
+        suggestionFormTitle: 'Suggestions',
+        suggestionFormSub: 'Your opinion helps us improve',
+        suggestionNameLabel: 'Your Name (Optional)',
+        suggestionTypeLabel: 'Suggestion Type *',
+        suggestionTextLabel: 'Your Suggestion *',
+        suggestionSubmitBtn: 'Submit Suggestion',
+        groupRoomTitle: 'Vicks Market Group',
+        groupRoomSub: 'Open to everyone • Official Group',
+        groupEmpty: 'No messages yet — be the first to write!',
+        groupPlaceholder: 'Write a message...',
+        storyReplyPlaceholder: 'Write a reply...',
+        complaintTypes: ['Fraud / Scam', 'Policy Violation', 'Abuse or Harassment', 'Other'],
+        suggestionTypes: ['Existing Improvement', 'New Feature', 'Design & UI', 'Other']
+      }
+    };
+
+    const CATEGORIES = [
+      { id: 'all', ar: 'الكل', en: 'All', icon: 'layout-grid' },
+      { id: 'offers', ar: 'عروض اليوم', en: "Today's Offers", icon: 'flame' },
+      { id: 'electronics', ar: 'إلكترونيات', en: 'Electronics', icon: 'cpu' },
+      { id: 'clothing', ar: 'ملابس', en: 'Clothing', icon: 'shirt' }
+    ];
+
+    const STORY_BG_STYLES = [
+      { id: 'sunset', labelAr: 'برتقالي دافئ', labelEn: 'Warm Sunset', classes: 'from-orange-500 via-amber-500 to-rose-500' },
+      { id: 'ocean', labelAr: 'أزرق ليلي', labelEn: 'Deep Ocean', classes: 'from-slate-900 via-sky-900 to-indigo-900' },
+      { id: 'emerald', labelAr: 'زمردي هادئ', labelEn: 'Emerald Calm', classes: 'from-emerald-700 via-teal-700 to-slate-900' },
+      { id: 'plum', labelAr: 'بنفسجي ملكي', labelEn: 'Royal Plum', classes: 'from-fuchsia-900 via-purple-900 to-slate-900' }
+    ];
+
+    // -----------------------------------------------------------------------
+    // 3. REALTIME DATABASE & FIRESTORE SYNC ADAPTERS
+    // -----------------------------------------------------------------------
+    function normalizeStories(rawVal) {
+      if (!rawVal) return [];
+      const arr = Array.isArray(rawVal)
+        ? rawVal.filter(Boolean)
+        : Object.entries(rawVal).map(([key, val]) => ({ id: key, ...(val || {}) }));
+      return arr
+        .map((s) => ({
+          ...s,
+          id: s.id || ("story_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6)),
+          replies: Array.isArray(s.replies)
+            ? s.replies
+            : s.replies && typeof s.replies === "object"
+              ? Object.values(s.replies)
+              : [],
+          createdAt: Number(s.createdAt) || 0
+        }))
+        .sort((a, b) => b.createdAt - a.createdAt);
+    }
+
+    function normalizeArrayCollection(rawVal, fallbackList = []) {
+      if (!rawVal) return [...fallbackList];
+      const arr = Array.isArray(rawVal)
+        ? rawVal.filter(Boolean)
+        : Object.entries(rawVal).map(([key, val]) => ({ id: key, ...(val || {}) }));
+      return arr.length > 0 ? arr : [...fallbackList];
+    }
+
+    function subscribeRealtimeAndFirestore() {
+      if (!firebaseReady || !rtdb || !db) {
+        markFallbackMode("Firebase SDK not initialized");
+        return;
+      }
+
+      try {
+        // Realtime Database: Stories & Replies
+        onValue(
+          ref(rtdb, "vicksMarket/stories"),
+          (snapshot) => {
+            state.syncStatus = "live";
+            state.stories = normalizeStories(snapshot.val());
+            saveLocalFallback();
+            renderStories();
+            updateEmptyAreaState();
+            const activeRepliesBox = document.getElementById("storyRepliesPreview");
+            if (activeRepliesBox && activeRepliesBox.dataset.storyId) {
+              const currentStory = state.stories.find((st) => st.id === activeRepliesBox.dataset.storyId);
+              if (currentStory) {
+                activeRepliesBox.innerHTML = (currentStory.replies || [])
+                  .map((rep) => `
+                    <div class="text-xs px-3 py-1.5 rounded-xl bg-white/10 text-slate-100">
+                      <span class="font-bold text-orange-300">${escapeHtml(rep.sender)}: </span>
+                      <span>${escapeHtml(rep.text)}</span>
+                    </div>
+                  `)
+                  .join("");
+              }
+            }
+          },
+          (err) => {
+            markFallbackMode(err?.message || "RTDB stories read error");
+          }
+        );
+
+        // Realtime Database: Group Chat Messages
+        onValue(
+          ref(rtdb, "vicksMarket/groupMessages"),
+          (snapshot) => {
+            state.syncStatus = "live";
+            const raw = snapshot.val();
+            state.groupMessages = raw
+              ? (Array.isArray(raw) ? raw.filter(Boolean) : Object.entries(raw).map(([id, m]) => ({ id, ...(m || {}) })))
+              : [];
+            saveLocalFallback();
+            const chatBox = document.getElementById("groupChatMessages");
+            if (chatBox) {
+              chatBox.innerHTML = renderGroupMessagesHtml();
+              chatBox.scrollTop = chatBox.scrollHeight;
+            }
+          },
+          (err) => {
+            markFallbackMode(err?.message || "RTDB group read error");
+          }
+        );
+
+        // Firestore: Public Reviews
+        onSnapshot(
+          collection(db, "artifacts/vicks-market/public/data/reviews"),
+          (snap) => {
+            state.syncStatus = "live";
+            const docsList = [];
+            snap.forEach((d) => docsList.push({ id: d.id, ...d.data() }));
+            if (docsList.length > 0) {
+              state.reviews = docsList.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+            }
+            saveLocalFallback();
+            const revListEl = document.getElementById("reviewsListContainer");
+            const revCountEl = document.getElementById("reviewsTotalCount");
+            if (revListEl) revListEl.innerHTML = renderReviewsListHtml();
+            if (revCountEl) revCountEl.textContent = String(state.reviews.length);
+          },
+          (err) => {
+            markFallbackMode(err?.message || "Firestore reviews read error");
+          }
+        );
+
+        // Firestore: Complaints & Suggestions sync
+        onSnapshot(
+          collection(db, "artifacts/vicks-market/public/data/complaints"),
+          (snap) => {
+            state.syncStatus = "live";
+            const list = [];
+            snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+            state.complaintsSubmitted = normalizeArrayCollection(list, state.complaintsSubmitted);
+            saveLocalFallback();
+          },
+          (err) => {
+            markFallbackMode(err?.message || "Firestore complaints read error");
+          }
+        );
+
+        onSnapshot(
+          collection(db, "artifacts/vicks-market/public/data/suggestions"),
+          (snap) => {
+            state.syncStatus = "live";
+            const list = [];
+            snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+            state.suggestionsSubmitted = normalizeArrayCollection(list, state.suggestionsSubmitted);
+            saveLocalFallback();
+          },
+          (err) => {
+            markFallbackMode(err?.message || "Firestore suggestions read error");
+          }
+        );
+      } catch (subErr) {
+        markFallbackMode(subErr?.message || "Subscription error");
+      }
+    }
+
+    async function persistStoryCreate(story) {
+      state.stories.unshift(story);
+      saveLocalFallback();
+      if (!firebaseReady || !rtdb) return;
+      try {
+        await set(ref(rtdb, `vicksMarket/stories/${story.id}`), story);
+        await setDoc(doc(db, "artifacts/vicks-market/public/data/stories", story.id), story);
+      } catch (err) {
+        markFallbackMode(err?.message || "Story write error");
+      }
+    }
+
+    async function persistStoryDelete(storyId) {
+      state.stories = state.stories.filter((s) => s.id !== storyId);
+      saveLocalFallback();
+      if (!firebaseReady || !rtdb) return;
+      try {
+        await remove(ref(rtdb, `vicksMarket/stories/${storyId}`));
+        await deleteDoc(doc(db, "artifacts/vicks-market/public/data/stories", storyId));
+      } catch (err) {
+        markFallbackMode(err?.message || "Story delete error");
+      }
+    }
+
+    async function persistStoryReply(storyId, replyObj) {
+      const target = state.stories.find((s) => s.id === storyId);
+      if (target) {
+        target.replies = [...(target.replies || []), replyObj];
+      }
+      saveLocalFallback();
+      if (!firebaseReady || !rtdb) return;
+      try {
+        await push(ref(rtdb, `vicksMarket/stories/${storyId}/replies`), replyObj);
+        if (target) {
+          await setDoc(doc(db, "artifacts/vicks-market/public/data/stories", storyId), target, { merge: true });
+        }
+      } catch (err) {
+        markFallbackMode(err?.message || "Story reply error");
+      }
+    }
+
+    async function persistReviewCreate(reviewObj) {
+      state.reviews.unshift(reviewObj);
+      saveLocalFallback();
+      if (!firebaseReady || !db) return;
+      try {
+        await setDoc(doc(db, "artifacts/vicks-market/public/data/reviews", reviewObj.id), reviewObj);
+        if (rtdb) {
+          await set(ref(rtdb, `vicksMarket/reviews/${reviewObj.id}`), reviewObj);
+        }
+      } catch (err) {
+        markFallbackMode(err?.message || "Review create error");
+      }
+    }
+
+    async function persistReviewLike(reviewId, nextLikes) {
+      const rev = state.reviews.find((r) => r.id === reviewId);
+      if (rev) rev.likes = nextLikes;
+      saveLocalFallback();
+      if (!firebaseReady || !db) return;
+      try {
+        await updateDoc(doc(db, "artifacts/vicks-market/public/data/reviews", reviewId), { likes: nextLikes });
+        if (rtdb) {
+          await update(ref(rtdb, `vicksMarket/reviews/${reviewId}`), { likes: nextLikes });
+        }
+      } catch (err) {
+        markFallbackMode(err?.message || "Review like error");
+      }
+    }
+
+    async function persistGroupMessage(msgObj) {
+      state.groupMessages.push(msgObj);
+      saveLocalFallback();
+      if (!firebaseReady || !rtdb) return;
+      try {
+        await set(ref(rtdb, `vicksMarket/groupMessages/${msgObj.id}`), msgObj);
+        await setDoc(doc(db, "artifacts/vicks-market/public/data/groupMessages", msgObj.id), msgObj);
+      } catch (err) {
+        markFallbackMode(err?.message || "Group message error");
+      }
+    }
+
+    async function persistComplaint(item) {
+      state.complaintsSubmitted.push(item);
+      saveLocalFallback();
+      if (!firebaseReady || !db) return;
+      try {
+        await setDoc(doc(db, "artifacts/vicks-market/public/data/complaints", item.id), item);
+        if (rtdb) {
+          await set(ref(rtdb, `vicksMarket/complaints/${item.id}`), item);
+        }
+      } catch (err) {
+        markFallbackMode(err?.message || "Complaint write error");
+      }
+    }
+
+    async function persistSuggestion(item) {
+      state.suggestionsSubmitted.push(item);
+      saveLocalFallback();
+      if (!firebaseReady || !db) return;
+      try {
+        await setDoc(doc(db, "artifacts/vicks-market/public/data/suggestions", item.id), item);
+        if (rtdb) {
+          await set(ref(rtdb, `vicksMarket/suggestions/${item.id}`), item);
+        }
+      } catch (err) {
+        markFallbackMode(err?.message || "Suggestion write error");
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 4. MODAL & TOAST UTILITIES
+    // -----------------------------------------------------------------------
+    let storyTimerInterval = null;
+    let storyPaused = false;
+    let storyProgressPct = 0;
+
+    function clearStoryPlayback() {
+      if (storyTimerInterval) {
+        clearInterval(storyTimerInterval);
+        storyTimerInterval = null;
+      }
+    }
+
+    function openModal(htmlContent, maxWidthClass = "max-w-lg") {
+      clearStoryPlayback();
+      const backdrop = document.getElementById("modalBackdrop");
+      const card = document.getElementById("modalCard");
+      const content = document.getElementById("modalContent");
+      card.className = `animate-pop relative w-full ${maxWidthClass} bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col`;
+      content.innerHTML = htmlContent;
+      backdrop.classList.remove("hidden");
+      backdrop.classList.add("flex");
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      clearStoryPlayback();
+      const backdrop = document.getElementById("modalBackdrop");
+      backdrop.classList.add("hidden");
+      backdrop.classList.remove("flex");
+      document.getElementById("modalContent").innerHTML = "";
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target && e.target.id === "modalBackdrop") {
+        closeModal();
+      }
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      const colorMap = {
+        success: "bg-emerald-600 text-white",
+        error: "bg-rose-600 text-white",
+        info: "bg-slate-900 text-white dark:bg-slate-800"
+      };
+      toast.className = `animate-pop pointer-events-auto px-4 py-3 rounded-2xl shadow-lg text-xs sm:text-sm font-bold flex items-center gap-2 ${colorMap[type] || colorMap.info}`;
+      toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(-6px)";
+        toast.style.transition = "all 0.2s ease";
+        setTimeout(() => toast.remove(), 220);
+      }, 2800);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. THEME & LANGUAGE SWITCHERS
+    // -----------------------------------------------------------------------
+    function toggleLanguage() {
+      state.lang = state.lang === "ar" ? "en" : "ar";
+      document.documentElement.lang = state.lang;
+      document.documentElement.dir = state.lang === "ar" ? "rtl" : "ltr";
+      applyLocalization();
+      renderCategoryTabs();
+      renderStories();
+      updateEmptyAreaState();
+      updateActiveFilterBar();
+      lucide.createIcons();
+    }
+
+    function toggleTheme() {
+      state.dark = !state.dark;
+      document.documentElement.classList.toggle("dark", state.dark);
+      const icon = document.getElementById("themeIcon");
+      icon.setAttribute("data-lucide", state.dark ? "sun" : "moon");
+      lucide.createIcons();
+    }
+
+    function applyLocalization() {
+      const t = i18n[state.lang];
+      document.getElementById("brandSubtitle").textContent = t.brandSubtitle;
+      document.getElementById("langLabel").textContent = t.langToggle;
+      document.getElementById("searchInput").placeholder = t.searchPlaceholder;
+      document.getElementById("accountLabel").textContent = state.user ? state.user.name : t.loginBtn;
+
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        const key = el.getAttribute("data-i18n");
+        if (t[key]) {
+          el.textContent = t[key];
+        }
+      });
+
+      const userBadge = document.getElementById("userBadge");
+      if (state.user) {
+        userBadge.textContent = state.user.storeName || "VIP";
+        userBadge.classList.remove("hidden");
+      } else {
+        userBadge.classList.add("hidden");
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 6. CATEGORIES, SEARCH & FILTERING
+    // -----------------------------------------------------------------------
+    function renderCategoryTabs() {
+      const container = document.getElementById("categoryTabs");
+      container.innerHTML = CATEGORIES.map((cat) => {
+        const active = state.category === cat.id;
+        return `
+          <button
+            onclick="selectCategory('${cat.id}')"
+            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shrink-0 transition active:scale-95 ${
+              active
+                ? "bg-vicks-500 text-white shadow-sm shadow-orange-500/25"
+                : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
+            }"
+          >
+            <i data-lucide="${cat.icon}" class="w-4 h-4"></i>
+            <span>${escapeHtml(cat[state.lang])}</span>
+          </button>
+        `;
+      }).join("");
+      lucide.createIcons();
+    }
+
+    function selectCategory(catId) {
+      state.category = catId;
+      renderCategoryTabs();
+      renderStories();
+      updateEmptyAreaState();
+      updateActiveFilterBar();
+    }
+
+    function handleSearchInput(val) {
+      state.searchQuery = val.trim().toLowerCase();
+      document.getElementById("clearSearchBtn").classList.toggle("hidden", !state.searchQuery);
+      renderStories();
+      updateEmptyAreaState();
+      updateActiveFilterBar();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById("searchInput");
+      input.value = "";
+      handleSearchInput("");
+    }
+
+    function resetHome() {
+      state.category = "all";
+      state.searchQuery = "";
+      document.getElementById("searchInput").value = "";
+      document.getElementById("clearSearchBtn").classList.add("hidden");
+      renderCategoryTabs();
+      renderStories();
+      updateEmptyAreaState();
+      updateActiveFilterBar();
+    }
+
+    function updateActiveFilterBar() {
+      const bar = document.getElementById("activeFilterBar");
+      const textEl = document.getElementById("activeFilterText");
+      const parts = [];
+
+      if (state.category !== "all") {
+        const catObj = CATEGORIES.find((c) => c.id === state.category);
+        if (catObj) parts.push(catObj[state.lang]);
+      }
+      if (state.searchQuery) {
+        parts.push(`"${state.searchQuery}"`);
+      }
+
+      if (parts.length > 0) {
+        textEl.textContent = (state.lang === "ar" ? "تصفية نشطة: " : "Active filter: ") + parts.join(" • ");
+        bar.classList.remove("hidden");
+        bar.classList.add("flex");
+      } else {
+        bar.classList.add("hidden");
+        bar.classList.remove("flex");
+      }
+    }
+
+    function getFilteredStories() {
+      return state.stories.filter((s) => {
+        if (state.category === "offers" && !s.isOffer) return false;
+        if (state.category === "electronics" && s.category !== "electronics") return false;
+        if (state.category === "clothing" && s.category !== "clothing") return false;
+
+        if (state.searchQuery) {
+          const q = state.searchQuery;
+          const matchAuthor = (s.author || "").toLowerCase().includes(q);
+          const matchCaption = (s.caption || "").toLowerCase().includes(q);
+          const matchEmoji = (s.emoji || "").toLowerCase().includes(q);
+          if (!matchAuthor && !matchCaption && !matchEmoji) return false;
+        }
+        return true;
+      });
+    }
+
+    function updateEmptyAreaState() {
+      const titleEl = document.getElementById("emptyAreaTitle");
+      const descEl = document.getElementById("emptyAreaDesc");
+      const t = i18n[state.lang];
+      const matchedStories = getFilteredStories();
+
+      if (state.searchQuery || state.category !== "all") {
+        titleEl.textContent = state.lang === "ar"
+          ? `لا توجد منتجات أو مواقع مطابقة (الحالات المطابقة: ${matchedStories.length})`
+          : `No products or locations match (Matching stories: ${matchedStories.length})`;
+        descEl.textContent = t.noProductsDesc;
+      } else {
+        titleEl.textContent = t.noProductsTitle;
+        descEl.textContent = t.noProductsDesc;
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 7. ADD STORY & INTERACTIVE STORY VIEWER MODAL
+    // -----------------------------------------------------------------------
+    function renderStories() {
+      const container = document.getElementById("storiesContainer");
+      const t = i18n[state.lang];
+      const items = getFilteredStories();
+
+      const addCardHtml = `
+        <button
+          type="button"
+          onclick="openAddStoryModal()"
+          class="flex flex-col items-center gap-1.5 shrink-0 group focus:outline-none"
+        >
+          <div class="w-16 h-16 sm:w-[70px] sm:h-[70px] rounded-full border-2 border-dashed border-vicks-500 bg-orange-50/80 dark:bg-orange-950/40 text-vicks-600 dark:text-orange-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <i data-lucide="plus" class="w-7 h-7 stroke-[2.5]"></i>
+          </div>
+          <span class="text-xs font-extrabold text-vicks-600 dark:text-orange-400 max-w-[76px] truncate">${escapeHtml(t.addStoryCardLabel)}</span>
+        </button>
+      `;
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          ${addCardHtml}
+          <p class="text-xs text-slate-400 py-4">${escapeHtml(t.noStoriesYet)}</p>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      const storiesHtml = items.map((s) => {
+        const bgStyle = STORY_BG_STYLES.find((b) => b.id === s.bgId) || STORY_BG_STYLES[0];
+        const badgeContent = s.imageUrl
+          ? `<img src="${escapeHtml(s.imageUrl)}" alt="${escapeHtml(s.author)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover rounded-full" /><span style="display:none" class="w-full h-full rounded-full bg-gradient-to-br ${bgStyle.classes} text-white text-xl items-center justify-center font-extrabold">${escapeHtml(s.emoji || "✨")}</span>`
+          : `<span class="w-full h-full rounded-full bg-gradient-to-br ${bgStyle.classes} text-white text-2xl flex items-center justify-center font-extrabold">${escapeHtml(s.emoji || "✨")}</span>`;
+
+        return `
+          <button type="button" onclick="openStoryModal('${s.id}')" class="flex flex-col items-center gap-1.5 shrink-0 group focus:outline-none">
+            <div class="w-16 h-16 sm:w-[70px] sm:h-[70px] rounded-full p-0.5 bg-gradient-to-tr from-amber-400 via-vicks-500 to-rose-500 group-hover:scale-105 transition-transform">
+              <div class="w-full h-full rounded-full border-2 border-white dark:border-slate-900 overflow-hidden flex items-center justify-center">
+                ${badgeContent}
+              </div>
+            </div>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-200 max-w-[78px] truncate">${escapeHtml(s.author)}</span>
+          </button>
+        `;
+      }).join("");
+
+      container.innerHTML = addCardHtml + storiesHtml;
+      lucide.createIcons();
+    }
+
+    function openAddStoryModal() {
+      const t = i18n[state.lang];
+      const defaultAuthor = state.user ? state.user.name : (state.lang === "ar" ? "حالتي" : "My Story");
+      const emojis = ["✨", "🔥", "🎉", "🛍️", "💡", "💬"];
+
+      openModal(`
+        <div class="p-5 sm:p-6 space-y-4">
+          <div class="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+            <div>
+              <h3 class="text-lg font-extrabold flex items-center gap-2 text-slate-900 dark:text-white">
+                <i data-lucide="plus-circle" class="w-5 h-5 text-vicks-500"></i>
+                <span>${t.addStoryModalTitle}</span>
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${t.addStoryModalSub}</p>
+            </div>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <form onsubmit="handleAddStorySubmit(event)" class="space-y-3.5">
+            <div>
+              <label class="block text-xs font-extrabold mb-1">${t.storyAuthorLabel}</label>
+              <input
+                id="storyAuthorInput"
+                type="text"
+                value="${escapeHtml(defaultAuthor)}"
+                maxlength="30"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-extrabold mb-1">${t.storyCaptionLabel}</label>
+              <textarea
+                id="storyCaptionInput"
+                rows="3"
+                required
+                placeholder="${t.storyCaptionPlaceholder}"
+                class="w-full p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-extrabold mb-1.5">${t.storyEmojiLabel}</label>
+              <div class="flex items-center gap-2 flex-wrap">
+                ${emojis.map((em, idx) => `
+                  <label class="cursor-pointer">
+                    <input type="radio" name="storyEmoji" value="${em}" ${idx === 0 ? "checked" : ""} class="peer sr-only" />
+                    <span class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 peer-checked:bg-orange-100 dark:peer-checked:bg-orange-950 peer-checked:ring-2 peer-checked:ring-vicks-500 flex items-center justify-center text-lg transition">
+                      ${em}
+                    </span>
+                  </label>
+                `).join("")}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-extrabold mb-1.5">${t.storyBgLabel}</label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                ${STORY_BG_STYLES.map((bg, idx) => `
+                  <label class="cursor-pointer">
+                    <input type="radio" name="storyBg" value="${bg.id}" ${idx === 0 ? "checked" : ""} class="peer sr-only" />
+                    <div class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 peer-checked:border-vicks-500 peer-checked:ring-2 peer-checked:ring-vicks-500/40 flex items-center gap-2 transition">
+                      <span class="w-5 h-5 rounded-full bg-gradient-to-br ${bg.classes} shrink-0"></span>
+                      <span class="text-[11px] font-bold truncate">${escapeHtml(state.lang === "ar" ? bg.labelAr : bg.labelEn)}</span>
+                    </div>
+                  </label>
+                `).join("")}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-extrabold mb-1">${t.storyImageLabel}</label>
+              <input
+                id="storyImageInput"
+                type="url"
+                placeholder="https://..."
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500"
+              />
+            </div>
+
+            <button
+              type="submit"
+              class="w-full py-3 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-sm font-extrabold flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 transition active:scale-[0.99]"
+            >
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>${t.publishStoryBtn}</span>
+            </button>
+          </form>
+        </div>
+      `, "max-w-lg");
+    }
+
+    async function handleAddStorySubmit(e) {
+      e.preventDefault();
+      const authorRaw = document.getElementById("storyAuthorInput").value.trim();
+      const caption = document.getElementById("storyCaptionInput").value.trim();
+      if (!caption) return;
+
+      const selectedEmoji = document.querySelector('input[name="storyEmoji"]:checked');
+      const selectedBg = document.querySelector('input[name="storyBg"]:checked');
+      const imageUrl = document.getElementById("storyImageInput").value.trim();
+
+      const newStory = {
+        id: "story_" + Date.now(),
+        author: authorRaw || (state.lang === "ar" ? "حالتي" : "My Story"),
+        caption,
+        emoji: selectedEmoji ? selectedEmoji.value : "✨",
+        bgId: selectedBg ? selectedBg.value : "sunset",
+        imageUrl,
+        category: state.category === "all" ? "offers" : state.category,
+        isOffer: state.category === "offers",
+        createdAt: Date.now(),
+        replies: []
+      };
+
+      await persistStoryCreate(newStory);
+      renderStories();
+      updateEmptyAreaState();
+      closeModal();
+      showToast(
+        state.lang === "ar" ? "تم نشر الحالة ومزامنتها للجميع!" : "Story published and synced live!",
+        "success"
+      );
+    }
+
+    function openStoryModal(storyId) {
+      const story = state.stories.find((s) => s.id === storyId);
+      if (!story) return;
+
+      const t = i18n[state.lang];
+      const bgStyle = STORY_BG_STYLES.find((b) => b.id === story.bgId) || STORY_BG_STYLES[0];
+      storyPaused = false;
+      storyProgressPct = 0;
+
+      openModal(`
+        <div class="relative bg-slate-950 text-white flex flex-col">
+          <div class="h-1 w-full bg-white/20 overflow-hidden">
+            <div id="storyProgressBar" class="h-full w-0 bg-gradient-to-r from-orange-400 to-vicks-500 transition-[width] duration-100"></div>
+          </div>
+
+          <div class="flex items-center justify-between p-4">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br ${bgStyle.classes} flex items-center justify-center text-lg font-extrabold shrink-0 border border-white/20">
+                ${escapeHtml(story.emoji || "✨")}
+              </div>
+              <div class="min-w-0">
+                <div class="font-extrabold text-sm truncate">${escapeHtml(story.author)}</div>
+                <div class="text-[11px] text-slate-300">${state.lang === "ar" ? "حالة نشطة" : "Active Story"}</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onclick="toggleStoryPlayback()"
+                id="storyPlayPauseBtn"
+                class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
+                title="${state.lang === "ar" ? "إيقاف / تشغيل" : "Pause / Play"}"
+              >
+                <i id="storyPlayPauseIcon" data-lucide="pause" class="w-4 h-4"></i>
+              </button>
+              <button
+                type="button"
+                onclick="deleteStory('${story.id}')"
+                class="p-2 rounded-full bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 transition"
+                title="${state.lang === "ar" ? "حذف الحالة" : "Delete Story"}"
+              >
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+              <button type="button" onclick="closeModal()" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="px-4 pb-3 space-y-3">
+            ${story.imageUrl ? `
+              <img
+                src="${escapeHtml(story.imageUrl)}"
+                alt="${escapeHtml(story.author)}"
+                onerror="this.classList.add('hidden')"
+                class="w-full h-56 object-cover rounded-2xl border border-white/10"
+              />
+            ` : `
+              <div class="w-full h-52 rounded-2xl bg-gradient-to-br ${bgStyle.classes} p-5 flex flex-col items-center justify-center text-center border border-white/10">
+                <span class="text-4xl mb-2">${escapeHtml(story.emoji || "✨")}</span>
+                <p class="text-base sm:text-lg font-extrabold leading-relaxed text-white">${escapeHtml(story.caption)}</p>
+              </div>
+            `}
+
+            <p class="text-sm text-slate-100 leading-relaxed">${escapeHtml(story.caption)}</p>
+
+            <div id="storyRepliesPreview" data-story-id="${story.id}" class="space-y-1.5 max-h-24 overflow-y-auto">
+              ${(story.replies || []).map((rep) => `
+                <div class="text-xs px-3 py-1.5 rounded-xl bg-white/10 text-slate-100">
+                  <span class="font-bold text-orange-300">${escapeHtml(rep.sender)}: </span>
+                  <span>${escapeHtml(rep.text)}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+
+          <form onsubmit="sendStoryReply(event, '${story.id}')" class="p-4 pt-1 flex items-center gap-2">
+            <input
+              id="storyReplyInput"
+              type="text"
+              required
+              placeholder="${t.storyReplyPlaceholder}"
+              class="flex-1 px-4 py-2.5 rounded-full bg-white/10 border border-white/15 text-sm text-white placeholder:text-slate-400 outline-none focus:border-orange-400"
+            />
+            <button type="submit" class="p-2.5 rounded-full bg-vicks-500 hover:bg-vicks-600 text-white transition active:scale-95">
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+          </form>
+        </div>
+      `, "max-w-md");
+
+      clearStoryPlayback();
+      storyTimerInterval = setInterval(() => {
+        if (storyPaused) return;
+        storyProgressPct += 2;
+        const bar = document.getElementById("storyProgressBar");
+        if (bar) {
+          bar.style.width = `${Math.min(100, storyProgressPct)}%`;
+        }
+        if (storyProgressPct >= 100) {
+          closeModal();
+        }
+      }, 120);
+    }
+
+    function toggleStoryPlayback() {
+      storyPaused = !storyPaused;
+      const icon = document.getElementById("storyPlayPauseIcon");
+      if (icon) {
+        icon.setAttribute("data-lucide", storyPaused ? "play" : "pause");
+        lucide.createIcons();
+      }
+    }
+
+    async function deleteStory(storyId) {
+      await persistStoryDelete(storyId);
+      renderStories();
+      updateEmptyAreaState();
+      closeModal();
+      showToast(
+        state.lang === "ar" ? "تم حذف الحالة." : "Story deleted.",
+        "info"
+      );
+    }
+
+    async function sendStoryReply(e, storyId) {
+      e.preventDefault();
+      const input = document.getElementById("storyReplyInput");
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const sender = state.user ? state.user.name : (state.lang === "ar" ? "أنت" : "You");
+      const replyObj = { sender, text: msg, createdAt: Date.now() };
+      await persistStoryReply(storyId, replyObj);
+
+      const story = state.stories.find((s) => s.id === storyId);
+      const box = document.getElementById("storyRepliesPreview");
+      if (box && story) {
+        box.innerHTML = (story.replies || []).map((rep) => `
+          <div class="text-xs px-3 py-1.5 rounded-xl bg-white/10 text-slate-100">
+            <span class="font-bold text-orange-300">${escapeHtml(rep.sender)}: </span>
+            <span>${escapeHtml(rep.text)}</span>
+          </div>
+        `).join("");
+        box.scrollTop = box.scrollHeight;
+      }
+
+      input.value = "";
+      showToast(
+        state.lang === "ar" ? "تم إرسال ردك ومزامنته!" : "Reply sent and synced!",
+        "success"
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // 8. BUYER REVIEWS MODAL
+    // -----------------------------------------------------------------------
+    let selectedReviewRating = 5;
+
+    function renderReviewsListHtml() {
+      return state.reviews.map((rev) => `
+        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-950 text-vicks-600 dark:text-orange-400 font-extrabold text-xs flex items-center justify-center">
+                ${escapeHtml((rev.author || "U").charAt(0))}
+              </div>
+              <div>
+                <div class="text-xs font-extrabold">${escapeHtml(rev.author)}</div>
+                <div class="text-amber-400 text-xs tracking-tight">
+                  ${"★".repeat(Number(rev.rating) || 5)}${"☆".repeat(Math.max(0, 5 - (Number(rev.rating) || 5)))}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onclick="toggleReviewLike('${rev.id}')"
+              class="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center gap-1 hover:border-vicks-400 transition"
+            >
+              <i data-lucide="thumbs-up" class="w-3.5 h-3.5 text-vicks-500"></i>
+              <span>${Number(rev.likes) || 0}</span>
+            </button>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">${escapeHtml(rev.text)}</p>
+        </div>
+      `).join("");
+    }
+
+    function openReviewsModal() {
+      const t = i18n[state.lang];
+      selectedReviewRating = 5;
+
+      openModal(`
+        <div class="p-5 sm:p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-extrabold">${t.reviewsTitle}</h3>
+              <span id="reviewsTotalCount" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-orange-100 text-vicks-700 dark:bg-orange-950 dark:text-orange-300">${state.reviews.length}</span>
+            </div>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <form onsubmit="submitReviewForm(event)" class="p-4 rounded-2xl bg-orange-50/60 dark:bg-slate-800/60 border border-orange-200/70 dark:border-slate-700 space-y-3">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <span class="text-xs font-extrabold">${t.yourRating}</span>
+              <div id="reviewStarPicker" class="flex items-center gap-1">
+                ${[1, 2, 3, 4, 5].map((star) => `
+                  <button
+                    type="button"
+                    data-star="${star}"
+                    onclick="setReviewRating(${star})"
+                    class="text-xl leading-none text-amber-400 hover:scale-110 transition"
+                  >★</button>
+                `).join("")}
+              </div>
+            </div>
+
+            <textarea
+              id="reviewTextInput"
+              rows="2"
+              placeholder="${t.reviewPlaceholder}"
+              class="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-vicks-500"
+            ></textarea>
+
+            <button
+              type="submit"
+              class="w-full py-2.5 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99]"
+            >
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>${t.publishComment}</span>
+            </button>
+          </form>
+
+          <div id="reviewsListContainer" class="space-y-2.5 max-h-72 overflow-y-auto">
+            ${renderReviewsListHtml()}
+          </div>
+        </div>
+      `, "max-w-lg");
+    }
+
+    function setReviewRating(star) {
+      selectedReviewRating = star;
+      const picker = document.getElementById("reviewStarPicker");
+      if (!picker) return;
+      picker.querySelectorAll("button[data-star]").forEach((btn) => {
+        const val = Number(btn.getAttribute("data-star"));
+        btn.className = `text-xl leading-none hover:scale-110 transition ${val <= star ? "text-amber-400" : "text-slate-300 dark:text-slate-600"}`;
+      });
+    }
+
+    async function submitReviewForm(e) {
+      e.preventDefault();
+      const input = document.getElementById("reviewTextInput");
+      const text = input.value.trim();
+      const t = i18n[state.lang];
+      if (!text) {
+        showToast(t.loginRequiredComment, "error");
+        return;
+      }
+
+      const author = state.user ? state.user.name : (state.lang === "ar" ? "زائر المنصة" : "Marketplace Guest");
+      const newRev = {
+        id: "rev_" + Date.now(),
+        author,
+        rating: selectedReviewRating,
+        text,
+        likes: 0,
+        createdAt: Date.now()
+      };
+
+      await persistReviewCreate(newRev);
+      input.value = "";
+      selectedReviewRating = 5;
+      setReviewRating(5);
+
+      const listEl = document.getElementById("reviewsListContainer");
+      const countEl = document.getElementById("reviewsTotalCount");
+      if (listEl) {
+        listEl.innerHTML = renderReviewsListHtml();
+        lucide.createIcons();
+      }
+      if (countEl) countEl.textContent = String(state.reviews.length);
+      showToast(t.commentSuccess, "success");
+    }
+
+    async function toggleReviewLike(revId) {
+      const rev = state.reviews.find((r) => r.id === revId);
+      if (!rev) return;
+      const nextLikes = (Number(rev.likes) || 0) + 1;
+      await persistReviewLike(revId, nextLikes);
+      const listEl = document.getElementById("reviewsListContainer");
+      if (listEl) {
+        listEl.innerHTML = renderReviewsListHtml();
+        lucide.createIcons();
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 9. SMART VISUAL SEARCH MODAL
+    // -----------------------------------------------------------------------
+    function openVisualSearchModal() {
+      const t = i18n[state.lang];
+      openModal(`
+        <div class="p-5 sm:p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-2">
+              <div class="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-950 text-vicks-600 dark:text-orange-400 flex items-center justify-center">
+                <i data-lucide="scan-search" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-base sm:text-lg font-extrabold">${t.visualSearchTitle}</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">${t.visualSearchSubtitle}</p>
+              </div>
+            </div>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <input id="visualFileInput" type="file" accept="image/png,image/jpeg,image/webp" onchange="handleVisualFileSelected(event)" class="hidden" />
+          <input id="visualCameraInput" type="file" accept="image/*" capture="environment" onchange="handleVisualFileSelected(event)" class="hidden" />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onclick="document.getElementById('visualFileInput').click()"
+              class="p-5 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white flex flex-col items-center justify-center gap-2 shadow-md shadow-orange-500/20 transition active:scale-[0.99]"
+            >
+              <i data-lucide="upload-cloud" class="w-7 h-7"></i>
+              <span class="text-sm font-extrabold">${t.uploadFromDevice}</span>
+            </button>
+
+            <button
+              type="button"
+              onclick="document.getElementById('visualCameraInput').click()"
+              class="p-5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 flex flex-col items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition active:scale-[0.99]"
+            >
+              <i data-lucide="camera" class="w-7 h-7 text-vicks-500"></i>
+              <span class="text-sm font-extrabold">${t.openCamera}</span>
+            </button>
+          </div>
+
+          <div id="visualPreviewArea" class="hidden p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2.5">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span id="visualFileName" class="truncate text-vicks-600 dark:text-orange-400"></span>
+              <span class="text-emerald-600 dark:text-emerald-400">${state.lang === "ar" ? "جاهزة للمعاينة" : "Ready"}</span>
+            </div>
+            <img id="visualPreviewImg" src="" alt="Preview" class="w-full h-44 object-contain rounded-xl bg-white dark:bg-slate-900" />
+          </div>
+
+          <p class="text-center text-xs text-slate-400">${t.visualSearchFormats}</p>
+        </div>
+      `, "max-w-md");
+    }
+
+    function handleVisualFileSelected(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const area = document.getElementById("visualPreviewArea");
+        const img = document.getElementById("visualPreviewImg");
+        const nameEl = document.getElementById("visualFileName");
+        if (area && img && nameEl) {
+          img.src = ev.target.result;
+          nameEl.textContent = file.name;
+          area.classList.remove("hidden");
+        }
+        showToast(
+          state.lang === "ar" ? `تم تحميل الصورة: ${file.name}` : `Loaded image: ${file.name}`,
+          "success"
+        );
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // -----------------------------------------------------------------------
+    // 10. VICKS AI ASSISTANT MODAL
+    // -----------------------------------------------------------------------
+    let aiMessages = [];
+
+    function openAiModal() {
+      const t = i18n[state.lang];
+      if (aiMessages.length === 0) {
+        aiMessages.push({ role: "assistant", text: t.aiWelcome });
+      }
+
+      openModal(`
+        <div class="flex flex-col h-[78vh] max-h-[620px]">
+          <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-transparent">
+            <div class="flex items-center gap-2.5">
+              <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-400 to-vicks-600 text-white flex items-center justify-center shadow-sm">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="font-extrabold text-sm sm:text-base flex items-center gap-1.5">
+                  <span>VICKS AI</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-vicks-700 dark:bg-orange-950 dark:text-orange-300">LIVE</span>
+                </h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">${state.lang === "ar" ? "مساعدك الذكي داخل VICKS MARKET" : "Your smart assistant in VICKS MARKET"}</p>
+              </div>
+            </div>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <div id="aiChatFeed" class="flex-1 overflow-y-auto p-4 space-y-3">
+            ${renderAiMessagesHtml()}
+          </div>
+
+          <form onsubmit="sendAiMessage(event)" class="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900">
+            <button type="button" onclick="closeModal(); openVisualSearchModal();" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-vicks-600 dark:text-orange-400 transition" title="${t.visualSearchShort}">
+              <i data-lucide="image-plus" class="w-5 h-5"></i>
+            </button>
+            <input
+              id="aiPromptInput"
+              type="text"
+              required
+              placeholder="${t.aiInputPlaceholder}"
+              class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500"
+            />
+            <button type="submit" class="p-2.5 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white transition active:scale-95">
+              <i data-lucide="send" class="w-5 h-5"></i>
+            </button>
+          </form>
+        </div>
+      `, "max-w-lg");
+
+      const feed = document.getElementById("aiChatFeed");
+      if (feed) feed.scrollTop = feed.scrollHeight;
+    }
+
+    function renderAiMessagesHtml() {
+      return aiMessages.map((m) => {
+        const isUser = m.role === "user";
+        return `
+          <div class="flex ${isUser ? "justify-end" : "justify-start"}">
+            <div class="max-w-[82%] px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+              isUser
+                ? "bg-vicks-500 text-white rounded-be-xs font-medium"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bs-xs"
+            }">
+              ${escapeHtml(m.text)}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function generateVicksAiReply(promptText) {
+      const q = promptText.toLowerCase();
+      if (state.lang === "en") {
+        if (q.includes("story") || q.includes("stories")) {
+          return `There are currently ${state.stories.length} stories synced in VICKS MARKET. You can tap "+ Add Story" anytime to publish a new story for everyone.`;
+        }
+        return `Got it! Regarding "${promptText}", you can add stories, read or post reviews, and join the community group directly from VICKS MARKET.`;
+      }
+
+      if (q.includes("حالة") || q.includes("حالات") || q.includes("ستوري")) {
+        return `يوجد حالياً ${state.stories.length} حالة متزامنة في VICKS MARKET. تقدر تضيف حالة جديدة في أي وقت من زر "إضافة حالة" وتظهر للجميع فوراً.`;
+      }
+      if (q.includes("تقييم") || q.includes("رأي") || q.includes("مراجعات")) {
+        return `لدينا حالياً ${state.reviews.length} تقييمات من المشترين والمستخدمين. يمكنك فتح "آراء المشترين" لإضافة تقييمك أو الإعجاب بالتعليقات.`;
+      }
+      return `بخصوص "${promptText}": يمكنك إضافة ومشاهدة الحالات، كتابة التقييمات، أو الدردشة في المجموعات بشكل مباشر داخل VICKS MARKET.`;
+    }
+
+    function sendAiMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById("aiPromptInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      aiMessages.push({ role: "user", text });
+      const reply = generateVicksAiReply(text);
+      aiMessages.push({ role: "assistant", text: reply });
+      input.value = "";
+
+      const feed = document.getElementById("aiChatFeed");
+      if (feed) {
+        feed.innerHTML = renderAiMessagesHtml();
+        feed.scrollTop = feed.scrollHeight;
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 11. COMMUNITY HUB MODAL (COMPLAINTS, SUGGESTIONS, GROUPS) & INFO PAGES
+    // -----------------------------------------------------------------------
+    function renderGroupMessagesHtml() {
+      const t = i18n[state.lang];
+      if (state.groupMessages.length === 0) {
+        return `
+          <div class="h-full flex flex-col items-center justify-center text-center py-12 text-slate-400">
+            <i data-lucide="messages-square" class="w-10 h-10 mb-2 opacity-50"></i>
+            <p class="text-xs sm:text-sm font-bold">${t.groupEmpty}</p>
+          </div>
+        `;
+      }
+      return state.groupMessages.map((m) => `
+        <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 space-y-1">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-extrabold text-vicks-600 dark:text-orange-400">${escapeHtml(m.sender)}</span>
+            <span class="text-slate-400">${escapeHtml(m.time)}</span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-800 dark:text-slate-100">${escapeHtml(m.text)}</p>
+        </div>
+      `).join("");
+    }
+
+    function openHubModal(tab = "complaints") {
+      const t = i18n[state.lang];
+      const complaintOptions = t.complaintTypes.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+      const suggestionOptions = t.suggestionTypes.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+
+      openModal(`
+        <div class="flex flex-col max-h-[85vh]">
+          <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="switchHubTab('complaints')" id="hubTab-complaints" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition">${t.complaintsTitle}</button>
+              <button type="button" onclick="switchHubTab('suggestions')" id="hubTab-suggestions" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition">${t.suggestionsTitle}</button>
+              <button type="button" onclick="switchHubTab('groups')" id="hubTab-groups" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition">${t.groupsTitle}</button>
+            </div>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <div class="p-5 overflow-y-auto flex-1">
+            <!-- COMPLAINTS PANEL -->
+            <div id="hubPanel-complaints" class="space-y-4">
+              <div>
+                <h3 class="text-lg font-extrabold flex items-center gap-2">
+                  <i data-lucide="shield-alert" class="w-5 h-5 text-rose-500"></i>
+                  <span>${t.complaintFormTitle}</span>
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">${t.complaintFormSub}</p>
+              </div>
+              <form onsubmit="submitComplaintForm(event)" class="space-y-3">
+                <div>
+                  <label class="block text-xs font-bold mb-1">${t.complaintTargetLabel}</label>
+                  <input id="compTarget" type="text" required placeholder="${state.lang === "ar" ? "مثال: 12345678 أو اسم المستخدم" : "e.g. 12345678 or username"}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-rose-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold mb-1">${t.complaintTypeLabel}</label>
+                  <select id="compType" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-rose-500">
+                    ${complaintOptions}
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold mb-1">${t.complaintDetailsLabel}</label>
+                  <textarea id="compDetails" rows="3" required placeholder="${state.lang === "ar" ? "اشرح المشكلة بالتفصيل..." : "Describe the issue in detail..."}" class="w-full p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-rose-500"></textarea>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold mb-1">${t.complaintSenderLabel}</label>
+                  <input id="compSender" type="text" placeholder="${state.lang === "ar" ? "اتركه فارغاً للبقاء مجهولاً" : "Leave blank to stay anonymous"}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-rose-500" />
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-extrabold flex items-center justify-center gap-2 shadow-md shadow-rose-600/20 transition">
+                  <i data-lucide="shield-check" class="w-4 h-4"></i>
+                  <span>${t.complaintSubmitBtn}</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- SUGGESTIONS PANEL -->
+            <div id="hubPanel-suggestions" class="hidden space-y-4">
+              <div>
+                <h3 class="text-lg font-extrabold flex items-center gap-2">
+                  <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500"></i>
+                  <span>${t.suggestionFormTitle}</span>
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">${t.suggestionFormSub}</p>
+              </div>
+              <form onsubmit="submitSuggestionForm(event)" class="space-y-3">
+                <div>
+                  <label class="block text-xs font-bold mb-1">${t.suggestionNameLabel}</label>
+                  <input id="suggName" type="text" placeholder="${state.lang === "ar" ? "يمكنك الإرسال بدون اسم" : "You can submit anonymously"}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-amber-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold mb-1">${t.suggestionTypeLabel}</label>
+                  <select id="suggType" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+                    ${suggestionOptions}
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold mb-1">${t.suggestionTextLabel}</label>
+                  <textarea id="suggText" rows="3" required placeholder="${state.lang === "ar" ? "اكتب اقتراحك هنا..." : "Write your suggestion here..."}" class="w-full p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-extrabold flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 transition">
+                  <i data-lucide="lightbulb" class="w-4 h-4"></i>
+                  <span>${t.suggestionSubmitBtn}</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- GROUPS CHAT PANEL -->
+            <div id="hubPanel-groups" class="hidden space-y-3">
+              <div class="flex items-center justify-between p-3 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200/70 dark:border-orange-800/50">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400 text-[10px] font-extrabold">LIVE</span>
+                    <h4 class="font-extrabold text-sm">${t.groupRoomTitle}</h4>
+                  </div>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400">${t.groupRoomSub}</p>
+                </div>
+                <i data-lucide="users" class="w-5 h-5 text-vicks-500"></i>
+              </div>
+
+              <div id="groupChatMessages" class="h-56 overflow-y-auto p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2.5">
+                ${renderGroupMessagesHtml()}
+              </div>
+
+              <form onsubmit="sendGroupMessage(event)" class="flex items-center gap-2">
+                <input id="groupMsgInput" type="text" required placeholder="${t.groupPlaceholder}" class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+                <button type="submit" class="p-2.5 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white transition active:scale-95">
+                  <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      `, "max-w-lg");
+
+      switchHubTab(tab);
+    }
+
+    function switchHubTab(tab) {
+      ["complaints", "suggestions", "groups"].forEach((key) => {
+        const panel = document.getElementById(`hubPanel-${key}`);
+        const btn = document.getElementById(`hubTab-${key}`);
+        const isActive = key === tab;
+        if (panel) panel.classList.toggle("hidden", !isActive);
+        if (btn) {
+          btn.className = `px-3.5 py-2 rounded-xl text-xs font-extrabold transition ${
+            isActive
+              ? "bg-vicks-500 text-white shadow-xs"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+          }`;
+        }
+      });
+      if (tab === "groups") {
+        const chatBox = document.getElementById("groupChatMessages");
+        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+      }
+      lucide.createIcons();
+    }
+
+    async function sendGroupMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById("groupMsgInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const sender = state.user ? state.user.name : (state.lang === "ar" ? "عضو المجموعة" : "Group Member");
+      const now = new Date();
+      const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const msgObj = {
+        id: "gmsg_" + Date.now(),
+        sender,
+        text,
+        time,
+        createdAt: Date.now()
+      };
+
+      await persistGroupMessage(msgObj);
+      input.value = "";
+
+      const chatBox = document.getElementById("groupChatMessages");
+      if (chatBox) {
+        chatBox.innerHTML = renderGroupMessagesHtml();
+        chatBox.scrollTop = chatBox.scrollHeight;
+        lucide.createIcons();
+      }
+      showToast(
+        state.lang === "ar" ? "تم إرسال الرسالة ومزامنتها!" : "Message sent and synced!",
+        "success"
+      );
+    }
+
+    async function submitComplaintForm(e) {
+      e.preventDefault();
+      const target = document.getElementById("compTarget").value.trim();
+      const type = document.getElementById("compType").value;
+      const details = document.getElementById("compDetails").value.trim();
+      const sender = document.getElementById("compSender").value.trim() || (state.lang === "ar" ? "مجهول" : "Anonymous");
+
+      const item = {
+        id: "comp_" + Date.now(),
+        target,
+        type,
+        details,
+        sender,
+        date: new Date().toISOString()
+      };
+      await persistComplaint(item);
+      closeModal();
+      showToast(
+        state.lang === "ar" ? "تم استلام شكواك ومزامنتها وسيتم مراجعتها." : "Your complaint has been submitted and synced.",
+        "success"
+      );
+    }
+
+    async function submitSuggestionForm(e) {
+      e.preventDefault();
+      const name = document.getElementById("suggName").value.trim() || (state.lang === "ar" ? "بدون اسم" : "Anonymous");
+      const type = document.getElementById("suggType").value;
+      const text = document.getElementById("suggText").value.trim();
+
+      const item = {
+        id: "sugg_" + Date.now(),
+        name,
+        type,
+        text,
+        date: new Date().toISOString()
+      };
+      await persistSuggestion(item);
+      closeModal();
+      showToast(
+        state.lang === "ar" ? "شكراً لاقتراحك! نقدر مشاركتك لتطوير المنصة." : "Thank you for your suggestion!",
+        "success"
+      );
+    }
+
+    function openInfoModal(topic) {
+      const infoMap = {
+        vip: {
+          titleAr: "خدمات VIP للمتاجر والمشترين",
+          titleEn: "VIP Services for Stores & Shoppers",
+          bodyAr: "تمنح عضوية VIP المتاجر شارة التوثيق، أولوية الظهور، وتجربة متقدمة داخل VICKS MARKET.",
+          bodyEn: "VIP status gives stores verified badges, priority visibility, and an enhanced experience inside VICKS MARKET."
+        },
+        faq: {
+          titleAr: "الأسئلة الشائعة",
+          titleEn: "Frequently Asked Questions",
+          bodyAr: "يمكنك إضافة القصص والتفاعل معها، إضافة تقييم، المشاركة في المجموعات، أو التواصل مع مساعد VICKS AI في أي وقت.",
+          bodyEn: "You can add and view stories, post reviews, join community groups, or chat with VICKS AI anytime."
+        },
+        terms: {
+          titleAr: "الشروط والأحكام",
+          titleEn: "Terms & Conditions",
+          bodyAr: "يلتزم جميع المستخدمين بالاحترام والشفافية، وتعمل منصة VICKS MARKET وفق معايير الاستخدام الآمن.",
+          bodyEn: "All users agree to respectful and transparent participation under VICKS MARKET safety guidelines."
+        },
+        verify: {
+          titleAr: "تحقق الحساب",
+          titleEn: "Account Verification",
+          bodyAr: "تأكيد البريد الإلكتروني وبيانات الحساب يساعد في رفع مستوى الثقة داخل VICKS MARKET.",
+          bodyEn: "Verifying your email and account details helps build trust across VICKS MARKET."
+        }
+      };
+      const item = infoMap[topic] || infoMap.faq;
+      openModal(`
+        <div class="p-5 sm:p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <h3 class="text-lg font-extrabold">${state.lang === "ar" ? item.titleAr : item.titleEn}</h3>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+          <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            ${state.lang === "ar" ? item.bodyAr : item.bodyEn}
+          </p>
+        </div>
+      `, "max-w-md");
+    }
+
+    // -----------------------------------------------------------------------
+    // 12. AUTHENTICATION: LOGIN, FORGOT PASSWORD (6-DIGIT CODE), SIGNUP
+    // -----------------------------------------------------------------------
+    function handleAccountClick() {
+      if (state.user) {
+        openProfileModal();
+      } else {
+        openLoginModal();
+      }
+    }
+
+    function openProfileModal() {
+      const t = i18n[state.lang];
+      openModal(`
+        <div class="p-6 text-center space-y-4">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-orange-100 dark:bg-orange-950 text-vicks-600 dark:text-orange-400 flex items-center justify-center text-2xl font-extrabold">
+            ${escapeHtml(state.user.name.charAt(0).toUpperCase())}
+          </div>
+          <div>
+            <h3 class="text-lg font-extrabold">${escapeHtml(state.user.name)}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">${escapeHtml(state.user.email)}</p>
+            ${state.user.storeName ? `<span class="inline-block mt-2 text-xs font-bold px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/60 text-vicks-600 dark:text-orange-400">${escapeHtml(state.user.storeName)}</span>` : ""}
+          </div>
+          <div class="flex gap-2 pt-2">
+            <button type="button" onclick="closeModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-extrabold">${state.lang === "ar" ? "إغلاق" : "Close"}</button>
+            <button type="button" onclick="logoutUser()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold">${t.logoutBtn}</button>
+          </div>
+        </div>
+      `, "max-w-sm");
+    }
+
+    function logoutUser() {
+      state.user = null;
+      applyLocalization();
+      closeModal();
+      showToast(state.lang === "ar" ? "تم تسجيل الخروج." : "Logged out.", "info");
+    }
+
+    function openLoginModal() {
+      const t = i18n[state.lang];
+      openModal(`
+        <div class="p-6 sm:p-7 space-y-5">
+          <div class="flex justify-end">
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <div class="text-center space-y-1.5 -mt-4">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-orange-400 to-vicks-600 text-white flex items-center justify-center shadow-lg shadow-orange-500/25">
+              <i data-lucide="shopping-bag" class="w-7 h-7"></i>
+            </div>
+            <h3 class="text-xl font-extrabold">${t.loginHeading}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">${t.loginSub}</p>
+          </div>
+
+          <form onsubmit="handleLoginSubmit(event)" class="space-y-3.5">
+            <div>
+              <label class="block text-xs font-bold mb-1">${t.emailLabel}</label>
+              <input id="loginEmail" type="email" required placeholder="name@example.com" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">${t.passwordLabel}</label>
+              <input id="loginPassword" type="password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+            </div>
+
+            <div class="flex justify-end">
+              <button type="button" onclick="openForgotPasswordStep1()" class="text-xs font-bold text-vicks-600 dark:text-orange-400 hover:underline">
+                ${t.forgotPassword}
+              </button>
+            </div>
+
+            <button type="submit" class="w-full py-3 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-sm font-extrabold shadow-md shadow-orange-500/25 transition active:scale-[0.99]">
+              ${t.loginSubmit}
+            </button>
+          </form>
+
+          <p class="text-center text-xs text-slate-500 dark:text-slate-400">
+            ${t.noAccount}
+            <button type="button" onclick="openSignupModal()" class="font-extrabold text-vicks-600 dark:text-orange-400 hover:underline">
+              ${t.createAccount}
+            </button>
+          </p>
+        </div>
+      `, "max-w-md");
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const derivedName = email.split("@")[0] || "User";
+      state.user = {
+        name: derivedName,
+        email,
+        storeName: state.lang === "ar" ? "حساب موثق" : "Verified Account"
+      };
+      applyLocalization();
+      closeModal();
+      showToast(
+        state.lang === "ar" ? `أهلاً بك يا ${derivedName}!` : `Welcome back, ${derivedName}!`,
+        "success"
+      );
+    }
+
+    function openForgotPasswordStep1() {
+      const t = i18n[state.lang];
+      openModal(`
+        <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <button type="button" onclick="openLoginModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold flex items-center gap-1">
+              <i data-lucide="arrow-right" class="w-4 h-4 rtl:block hidden"></i>
+              <i data-lucide="arrow-left" class="w-4 h-4 ltr:block hidden"></i>
+            </button>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <div class="text-center space-y-1">
+            <h3 class="text-lg font-extrabold">${t.resetStep1Title}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">${t.resetStep1Desc}</p>
+          </div>
+
+          <div class="flex items-center justify-center gap-3 py-1">
+            <span class="w-7 h-7 rounded-full bg-vicks-500 text-white text-xs font-extrabold flex items-center justify-center">1</span>
+            <span class="w-8 h-0.5 bg-slate-200 dark:bg-slate-700"></span>
+            <span class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 text-xs font-bold flex items-center justify-center">2</span>
+            <span class="w-8 h-0.5 bg-slate-200 dark:bg-slate-700"></span>
+            <span class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 text-xs font-bold flex items-center justify-center">3</span>
+          </div>
+
+          <form onsubmit="handleSendResetCode(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold mb-1">${t.emailLabel}</label>
+              <input id="resetEmailInput" type="email" required placeholder="name@example.com" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+            </div>
+            <button type="submit" class="w-full py-3 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-sm font-extrabold transition">
+              ${t.sendCodeBtn}
+            </button>
+          </form>
+        </div>
+      `, "max-w-md");
+    }
+
+    function handleSendResetCode(e) {
+      e.preventDefault();
+      const email = document.getElementById("resetEmailInput").value.trim();
+      showToast(
+        state.lang === "ar" ? `تم إرسال كود التحقق إلى ${email}` : `Verification code sent to ${email}`,
+        "success"
+      );
+      openForgotPasswordStep2(email);
+    }
+
+    function openForgotPasswordStep2(email) {
+      const t = i18n[state.lang];
+      openModal(`
+        <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <button type="button" onclick="openForgotPasswordStep1()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800">
+              <i data-lucide="arrow-right" class="w-4 h-4 rtl:block hidden"></i>
+              <i data-lucide="arrow-left" class="w-4 h-4 ltr:block hidden"></i>
+            </button>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <div class="text-center space-y-1">
+            <h3 class="text-lg font-extrabold">${t.resetStep2Title}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">${t.resetStep2Desc}</p>
+            <p class="text-xs font-bold text-vicks-600 dark:text-orange-400">${escapeHtml(email)}</p>
+          </div>
+
+          <div class="flex items-center justify-center gap-3 py-1">
+            <span class="w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-extrabold flex items-center justify-center">✓</span>
+            <span class="w-8 h-0.5 bg-vicks-500"></span>
+            <span class="w-7 h-7 rounded-full bg-vicks-500 text-white text-xs font-extrabold flex items-center justify-center">2</span>
+            <span class="w-8 h-0.5 bg-slate-200 dark:bg-slate-700"></span>
+            <span class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 text-xs font-bold flex items-center justify-center">3</span>
+          </div>
+
+          <form onsubmit="handleVerify6DigitCode(event)" class="space-y-4">
+            <input
+              id="sixDigitCode"
+              type="text"
+              inputmode="numeric"
+              maxlength="6"
+              minlength="6"
+              required
+              placeholder="• • • • • •"
+              class="w-full text-center tracking-[0.5em] text-lg font-extrabold py-3 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-vicks-500"
+            />
+            <button type="submit" class="w-full py-3 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-sm font-extrabold transition">
+              ${t.verifyCodeBtn}
+            </button>
+          </form>
+        </div>
+      `, "max-w-md");
+    }
+
+    function handleVerify6DigitCode(e) {
+      e.preventDefault();
+      const code = document.getElementById("sixDigitCode").value.trim();
+      if (code.length < 6) return;
+      showToast(
+        state.lang === "ar" ? "تم التحقق من الكود بنجاح! يمكنك تسجيل الدخول الآن." : "Code verified! You can now log in.",
+        "success"
+      );
+      openLoginModal();
+    }
+
+    function openSignupModal() {
+      const t = i18n[state.lang];
+      openModal(`
+        <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xl font-extrabold">${t.signupHeading}</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">${t.signupSub}</p>
+            </div>
+            <button type="button" onclick="closeModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <form onsubmit="handleSignupSubmit(event)" class="space-y-3">
+            <div>
+              <label class="block text-xs font-bold mb-1">${t.storeNameLabel}</label>
+              <input id="signupStore" type="text" required placeholder="${state.lang === "ar" ? "اسم متجرك..." : "Your store name..."}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">${t.emailLabel}</label>
+              <input id="signupEmail" type="email" required placeholder="store@example.com" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">${t.passwordLabel}</label>
+              <input id="signupPass" type="password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold mb-1">${t.confirmPasswordLabel}</label>
+              <input id="signupConfirm" type="password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-vicks-500" />
+            </div>
+
+            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 cursor-pointer">
+              <span class="flex items-center gap-2.5 text-xs font-bold">
+                <input id="robotCheck" type="checkbox" required class="w-4 h-4 accent-vicks-500 rounded" />
+                <span>${t.notARobot}</span>
+              </span>
+              <i data-lucide="shield-check" class="w-5 h-5 text-emerald-500"></i>
+            </label>
+
+            <button type="submit" class="w-full py-3 rounded-xl bg-vicks-500 hover:bg-vicks-600 text-white text-sm font-extrabold shadow-md shadow-orange-500/25 transition active:scale-[0.99]">
+              ${t.signupSubmit}
+            </button>
+          </form>
+
+          <p class="text-center text-xs text-slate-500 dark:text-slate-400">
+            ${t.haveAccount}
+            <button type="button" onclick="openLoginModal()" class="font-extrabold text-vicks-600 dark:text-orange-400 hover:underline">
+              ${t.loginSubmit}
+            </button>
+          </p>
+        </div>
+      `, "max-w-md");
+    }
+
+    function handleSignupSubmit(e) {
+      e.preventDefault();
+      const storeName = document.getElementById("signupStore").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const pass = document.getElementById("signupPass").value;
+      const confirm = document.getElementById("signupConfirm").value;
+
+      if (pass !== confirm) {
+        showToast(
+          state.lang === "ar" ? "كلمتا المرور غير متطابقتين!" : "Passwords do not match!",
+          "error"
+        );
+        return;
+      }
+
+      state.user = {
+        name: storeName,
+        email,
+        storeName
+      };
+      applyLocalization();
+      closeModal();
+      showToast(
+        state.lang === "ar" ? `تم إنشاء حساب متجر "${storeName}" بنجاح!` : `Store "${storeName}" created successfully!`,
+        "success"
+      );
+    }
+
+    // Expose event handlers for inline DOM attributes inside module scope
+    Object.assign(window, {
+      resetHome,
+      toggleLanguage,
+      toggleTheme,
+      openAiModal,
+      handleAccountClick,
+      handleSearchInput,
+      clearSearch,
+      openVisualSearchModal,
+      selectCategory,
+      openAddStoryModal,
+      handleAddStorySubmit,
+      openStoryModal,
+      toggleStoryPlayback,
+      deleteStory,
+      sendStoryReply,
+      openReviewsModal,
+      setReviewRating,
+      submitReviewForm,
+      toggleReviewLike,
+      handleVisualFileSelected,
+      sendAiMessage,
+      openHubModal,
+      switchHubTab,
+      sendGroupMessage,
+      submitComplaintForm,
+      submitSuggestionForm,
+      openInfoModal,
+      closeModal,
+      handleBackdropClick,
+      logoutUser,
+      openLoginModal,
+      handleLoginSubmit,
+      openForgotPasswordStep1,
+      handleSendResetCode,
+      handleVerify6DigitCode,
+      openSignupModal,
+      handleSignupSubmit
+    });
+
+    // -----------------------------------------------------------------------
+    // 13. INITIALIZATION
+    // -----------------------------------------------------------------------
+    function renderAll() {
+      applyLocalization();
+      renderCategoryTabs();
+      renderStories();
+      updateEmptyAreaState();
+      lucide.createIcons();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadLocalFallback();
+      renderAll();
+      subscribeRealtimeAndFirestore();
+    });
+  </script>
+</body>
+</html>
